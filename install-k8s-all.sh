@@ -136,7 +136,7 @@ until argocd repo list || argocd login argo-cd-virtual.mgmt.kub-poc.local --user
 
 until argocd repo list; do sleep 1; done
 
-until argocd repo add git@github.com:cloudbase/bmk.git \
+until argocd repo add git@github.com:ader1990/bmk.git \
     --ssh-private-key-path ~/.ssh/for-u5; do sleep 1; done
 
 until argocd app sync management-apps || argocd app create management-apps \
