@@ -59,7 +59,7 @@ main() {
     rm -rf ~/.vbmc/
     vbmcd
 
-    create_controller
+    create_controller || true
 
     create_machine machine1
     create_bmc_machine machine1 623
