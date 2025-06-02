@@ -140,7 +140,7 @@ until argocd repo add git@github.com:ader1990/bmk.git \
     --ssh-private-key-path ~/.ssh/for-u5; do sleep 1; done
 
 until argocd app sync management-apps || argocd app create management-apps \
-    --repo git@github.com:cloudbase/bmk.git \
+    --repo git@github.com:ader1990/bmk.git \
     --path applications/management --dest-namespace argo-cd \
     --dest-server https://kubernetes.default.svc \
     --revision "${CURRENT_BRANCH}" --sync-policy automated; do sleep 1; done
@@ -195,7 +195,7 @@ until argocd cluster add kub-poc-admin@kub-poc \
    --insecure --yes; do sleep 1; done
 
 argocd app create workload-cluster-apps \
-    --repo git@github.com:cloudbase/bmk.git \
+    --repo git@github.com:ader1990/bmk.git \
     --path applications/workload --dest-namespace argo-cd \
     --dest-server https://kubernetes.default.svc \
     --revision "${CURRENT_BRANCH}" --sync-policy automated
