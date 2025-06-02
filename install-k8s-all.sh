@@ -118,7 +118,7 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
   -f config/management/ingress-nginx/values.yaml -v 6
 until kubectl wait deployment -n ingress-nginx ingress-nginx-controller --for condition=Available=True --timeout=90s; do sleep 1; done
 
-helm upgrade --install kube-vip kube-vip/kube-vip \
+helm upgrade --install kube-vip kube-vip/kube-vip --version 0.5.0 \
   --namespace kube-vip --create-namespace \
   -f config/management/ingress-nginx/kube-vip-values.yaml -v 6
 
