@@ -4,6 +4,21 @@
 
 Deploy a K8S cluster on baremetal servers with Cilium L2 CNI, Rook Ceph CSI and KubeVirt on a Virtualized KVM env.
 
+### Hardware setup
+
+Required: one beefy box with Ubuntu 24.04, that supports KVM virtualization. That is all.
+
+Order of operations:
+
+  * Prepare the beefy box: install packages, configure libvirt network, iptables, create the libvirt vms, start the vbmc.
+    -> helper script: create-machines.sh 
+  * VNC in the libvirt VM (management controller) and setup static networking and SSH
+    -> TO DO: automate this part using cloud-init
+  * Ssh in the libvirt VM (management controller) and prepare the setup
+    -> helper script: rename_repo_and_branch.sh, install-deps-k8s-all.sh 
+  * Ssh in the libvirt VM (management controller) and deploy the management and workload cluster
+    -> helper script: install-k8s-all.sh
+
 ## How to run
 
 Prepare the hardware environment as instructed below and then run:
