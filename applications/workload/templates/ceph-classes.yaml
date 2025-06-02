@@ -14,5 +14,5 @@ spec:
   project: default
   source:
     path: config/workload/ceph-classes
-    repoURL: git@github.com:cloudbase/BMK.git
+    repoURL: git@github.com:ader1990/BMK.git
     targetRevision: argocd-arm64-altra-flatcar-nativemetallb-bitnamisecrets-sysext
