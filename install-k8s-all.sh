@@ -48,18 +48,6 @@ yq -i \
   applications/management/values.yaml
 
 yq -i \
-  '.tinkstack.values.boots.env[3].value = strenv(MANAGEMENT_TINKERBELL_HTTP)' \
-  applications/management/values.yaml
-yq -i \
-  '.tinkstack.values.boots.env[4].value = strenv(MANAGEMENT_TINKERBELL_IP)' \
-  applications/management/values.yaml
-yq -i \
-  '.tinkstack.values.boots.env[5].value = strenv(MANAGEMENT_TINKERBELL_IP)' \
-  applications/management/values.yaml
-yq -i \
-  '.tinkstack.values.boots.env[7].value = strenv(MANAGEMENT_TINKERBELL_GRPC)' \
-  applications/management/values.yaml
-yq -i \
   '.tinkstack.values.stack.loadBalancerIP = strenv(MANAGEMENT_TINKERBELL_IP)' \
   applications/management/values.yaml
 
