@@ -95,7 +95,7 @@ tinkstack:
     hegel:
       trustedProxies: 10.0.0.0/8
     rufio:
-      image: quay.io/tinkerbell/rufio:0.4.1
+      image: quay.io/tinkerbell/rufio:v0.4.1
     stack:
       enabled: true
       kubevip:
