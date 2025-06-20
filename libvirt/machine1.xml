@@ -1,7 +1,7 @@
 <domain type='kvm' id='4'>
   <name>machine1</name>
   <uuid>a3478e0f-432c-4234-9c09-d87468d3d95f</uuid>
-  <memory unit='KiB'>29360128</memory>
+  <memory unit='KiB'>67108864</memory>
   <vcpu placement='static'>32</vcpu>
   <resource>
     <partition>/machine</partition>
@@ -79,6 +79,15 @@
       <boot order='2'/>
       <alias name='ua-net-1'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
+    </interface>
+    <interface type='network'>
+      <mac address='08:00:27:9e:f6:3a'/>
+      <source network='tink_network'/>
+      <target dev='vnet3'/>
+      <model type='virtio'/>
+      <driver iommu='off'/>
+      <alias name='ua-net-2'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
     </interface>
     <serial type='pty'>
       <source path='/dev/pts/2'/>
