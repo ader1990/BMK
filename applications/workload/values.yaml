@@ -4,11 +4,11 @@ wordpress:
   version: 15.2.55
   values:
     persistence:
-      storageClass: "ceph-block"
+      storageClass: "general"
     mariadb:
       primary:
         persistence:
-          storageClass: "ceph-block"
+          storageClass: "general"
 cilium:
   name: cilium-kub-poc
   namespace: kube-system
@@ -1107,7 +1107,7 @@ cluster:
           # enableRBDStats: true
         storageClass:
           enabled: true
-          name: ceph-block
+          name: general
           isDefault: true
           reclaimPolicy: Delete
           allowVolumeExpansion: true
@@ -1222,7 +1222,7 @@ cluster:
     # @default -- See [RBD Snapshots](../Storage-Configuration/Ceph-CSI/ceph-csi-snapshot.md#rbd-snapshots)
     cephBlockPoolsVolumeSnapshotClass:
       enabled: true
-      name: ceph-block
+      name: general
       isDefault: true
       deletionPolicy: Delete
       annotations: {}

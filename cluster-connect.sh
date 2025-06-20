@@ -261,7 +261,7 @@ function prepare_variables() {
   export clusterName="kub-poc"
   export extensionName="appservice-ext"
   export namespace="appservice-ns"
-  export storageClassName="ceph-block"
+  export storageClassName="general"
 
   export workspaceName="$clusterName-workspace"
   export kubeEnvironmentName="$clusterName-kube-environment"
