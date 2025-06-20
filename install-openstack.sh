@@ -194,9 +194,11 @@ KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c 'chmod 777 /dev
 KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm02 -- sh -c 'chmod 777 /dev/kvm'
 KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm03 -- sh -c 'chmod 777 /dev/kvm'
 
-openstack --os-cloud openstack_helm net create private
-openstack --os-cloud openstack_helm subnet create private --network private --subnet-range 10.5.0.0/24
-openstack --os-cloud openstack_helm server create --image 'Cirros 0.6.2 64-bit' --flavor m1.tiny --network private cirros
+rand_suffix=$(dd of=/tmp/rand if=/dev/random bs=1M count=1 && md5sum /tmp/rand | awk '{print $1}')
+
+openstack --os-cloud openstack_helm net show private || openstack --os-cloud openstack_helm net create private
+openstack --os-cloud openstack_helm subnet show private && openstack --os-cloud openstack_helm subnet create private --network private --subnet-range 10.5.0.0/24
+openstack --os-cloud openstack_helm server create --image 'Cirros 0.6.2 64-bit' --flavor m1.tiny --network private cirros-$rand_suffix
 sleep 10
-until openstack --os-cloud openstack_helm console log show cirros | grep -i gocubsgo; do sleep 1 && echo 'Trying again'; done
+until openstack --os-cloud openstack_helm console log show cirros-$rand_suffix | grep -i gocubsgo; do sleep 1 && echo 'Trying again'; done
 
