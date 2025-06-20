@@ -59,7 +59,9 @@ endpoints:
     namespace: rook-ceph
 EOF
 
-helm upgrade --install ceph-adapter-rook openstack-helm/ceph-adapter-rook     --namespace=openstack --values /tmp/ceph_adpater.yaml
+# this chart upgrade resets the mon discovery configmap: configmap/ceph-etc -n openstack
+# do not upgrade!!!
+helm install ceph-adapter-rook openstack-helm/ceph-adapter-rook --namespace=openstack --values /tmp/ceph_adpater.yaml || true
 
 export OPENSTACK_RELEASE=2025.1
 export FEATURES="${OPENSTACK_RELEASE} ubuntu_noble"
