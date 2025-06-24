@@ -1362,3 +1362,11 @@ openstack_openvswitch:
   name: openstack-openvswitch
   namespace: openstack
   version: 2025.1.0
+openstack_libvirt:
+  name: openstack-libvirt
+  namespace: openstack
+  version: 2025.1.0
+  values:
+    images:
+      tags:
+        libvirt: docker.io/openstackhelm/libvirt:2025.1-ubuntu_noble
