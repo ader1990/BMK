@@ -4,6 +4,16 @@
 set -xe
 
 export KUBECONFIG=~/kub-poc.kubeconfig
+
+kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm01 -p '{"spec":{"taints":[]}}' || true
+kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm02 -p '{"spec":{"taints":[]}}' || true
+kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm03 -p '{"spec":{"taints":[]}}' || true
+
+kubectl label --overwrite nodes --all openstack-control-plane=enabled
+kubectl label --overwrite nodes --all openstack-compute-node=enabled
+kubectl label --overwrite nodes --all openvswitch=enabled
+kubectl label --overwrite nodes --all linuxbridge=enabled
+
 helm repo add openstack-helm https://tarballs.opendev.org/openstack/openstack-helm
 helm plugin install https://opendev.org/openstack/openstack-helm-plugin || helm plugin update osh || true
 
@@ -40,15 +50,6 @@ spec:
   internalTrafficPolicy: Cluster
 EOF
 kubectl apply -f /tmp/openstack_lb.yaml
-
-kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm01 -p '{"spec":{"taints":[]}}' || true
-kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm02 -p '{"spec":{"taints":[]}}' || true
-kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm03 -p '{"spec":{"taints":[]}}' || true
-
-kubectl label --overwrite nodes --all openstack-control-plane=enabled
-kubectl label --overwrite nodes --all openstack-compute-node=enabled
-kubectl label --overwrite nodes --all openvswitch=enabled
-kubectl label --overwrite nodes --all linuxbridge=enabled
 
 tee > /tmp/ceph_adpater.yaml <<EOF
 ceph_cluster_namespace: rook-ceph
