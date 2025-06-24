@@ -1268,8 +1268,8 @@ cluster:
           parameters:
             # note: objectStoreNamespace and objectStoreName are configured by the chart
             region: us-east-1
-ingress_nginx_wkld:
-  name: ingress-nginx-wkld
+openstack_ingress_nginx:
+  name: openstack-ingress-nginx
   namespace: openstack
   version: 4.8.3
   values:
@@ -1288,10 +1288,10 @@ ingress_nginx_wkld:
       ingressClass: nginx
       labels:
         app: ingress-api
-openstack_lb:
+openstack_public_ip:
   key: value
-rabbitmq:
-  name: rabbitmq
+openstack_rabbitmq:
+  name: openstack-rabbitmq
   namespace: openstack
   version: 2025.1.0
   values:

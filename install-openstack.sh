@@ -17,8 +17,9 @@ kubectl label --overwrite nodes --all linuxbridge=enabled
 
 # use argocd
 
-argocd app sync ingress-nginx-wkld
-argocd app sync openstack-lb
+argocd app sync openstack-ingress-nginx
+argocd app sync openstack-public-ip
+argocd app sync openstack-rabbitmq
 
 # use local helm
 
