@@ -17,4 +17,4 @@ spec:
   type: LoadBalancer
   allocateLoadBalancerNodePorts: true
   internalTrafficPolicy: Cluster
-  clusterIP: 192.168.56.149 
+  loadBalancerIP: 192.168.56.149 
