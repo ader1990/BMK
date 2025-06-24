@@ -2,22 +2,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ .Values.rabbitmq.name }}
+  name: {{ .Values.openstack_rabbitmq.name }}
 spec:
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
       - CreateNamespace=true
   destination:
-    namespace: {{ .Values.rabbitmq.namespace }}
+    namespace: {{ .Values.openstack_rabbitmq.namespace }}
     server: https://192.168.56.151:6443
   project: default
   source:
     chart: rabbitmq
     repoURL: https://tarballs.opendev.org/openstack/openstack-helm
-    targetRevision: {{ .Values.rabbitmq.version }}
+    targetRevision: {{ .Values.openstack_rabbitmq.version }}
     helm:
       valueFiles:
         - values.yaml
       values: |-
-        {{- toYaml .Values.rabbitmq.values | nindent 8 }}
+        {{- toYaml .Values.openstack_rabbitmq.values | nindent 8 }}
