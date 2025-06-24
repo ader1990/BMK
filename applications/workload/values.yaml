@@ -1358,3 +1358,7 @@ openstack_glance:
         glance_api: "quay.io/airshipit/glance:2025.1-ubuntu_noble"
         glance_metadefs_load: "quay.io/airshipit/glance:2025.1-ubuntu_noble"
         glance_storage_init: "docker.io/openstackhelm/ceph-config-helper:latest-ubuntu_jammy"
+openstack_openvswitch:
+  name: openstack-openvswitch
+  namespace: openstack
+  version: 2025.1.0
