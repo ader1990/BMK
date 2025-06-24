@@ -1314,3 +1314,7 @@ openstack_mariadb:
     pod:
       replicas:
         server: 1
+openstack_memcached:
+  name: openstack-memcached
+  namespace: openstack
+  version: 2025.1.0
