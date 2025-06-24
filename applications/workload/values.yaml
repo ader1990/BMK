@@ -1432,7 +1432,7 @@ openstack_neutron:
           ovs:
             bridge_mappings: public:br-ex
 openstack_nova:
-  name: openstack_nova
+  name: openstack-nova
   namespace: openstack
   version: 2025.1.0
   values:
