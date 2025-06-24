@@ -1268,3 +1268,23 @@ cluster:
           parameters:
             # note: objectStoreNamespace and objectStoreName are configured by the chart
             region: us-east-1
+ingress-nginx:
+  name: ingress-nginx
+  namespace: openstack
+  version: 4.8.3
+  values:
+    controller:
+      kind: Deployment
+      admissionWebhooks:
+        enabled: false
+      scope:
+        enabled: true
+      service:
+        enabled: false
+      ingressClassResource:
+        name: nginx
+        controllerValue: "k8s.io/ingress-nginx"
+        default: false
+      ingressClass: nginx
+      labels:
+        app: ingress-api    
