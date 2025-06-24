@@ -1,0 +1,23 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.openstack_glance.name }}
+spec:
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+  destination:
+    namespace: {{ .Values.openstack_glance.namespace }}
+    server: https://192.168.56.151:6443
+  project: default
+  source:
+    chart: glance
+    repoURL: https://tarballs.opendev.org/openstack/openstack-helm
+    targetRevision: {{ .Values.openstack_glance.version }}
+    helm:
+      valueFiles:
+        - values.yaml
+      values: |-
+        {{- toYaml .Values.openstack_glance.values | nindent 8 }}
