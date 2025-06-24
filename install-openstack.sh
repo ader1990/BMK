@@ -17,40 +17,6 @@ kubectl label --overwrite nodes --all linuxbridge=enabled
 helm repo add openstack-helm https://tarballs.opendev.org/openstack/openstack-helm
 helm plugin install https://opendev.org/openstack/openstack-helm-plugin || helm plugin update osh || true
 
-tee > /tmp/openstack_namespace.yaml <<EOF
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: openstack
-EOF
-kubectl apply -f /tmp/openstack_namespace.yaml
-
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx     --version="4.8.3"     --namespace=openstack     --set controller.kind=Deployment     --set controller.admissionWebhooks.enabled="false"     --set controller.scope.enabled="true"     --set controller.service.enabled="false"     --set controller.ingressClassResource.name=nginx     --set controller.ingressClassResource.controllerValue="k8s.io/ingress-nginx"     --set controller.ingressClassResource.default="false"     --set controller.ingressClass=nginx     --set controller.labels.app=ingress-api
-
-tee > /tmp/openstack_lb.yaml <<EOF
-apiVersion: v1
-kind: Service
-metadata:
-  name: public-openstack
-  namespace: openstack
-  labels:
-    app.kubernetes.io/advertise: "true"
-spec:
-  externalTrafficPolicy: Cluster
-  selector:
-    app: ingress-api
-  ports:
-    - name: http
-      port: 80
-    - name: https
-      port: 443
-  type: LoadBalancer
-  allocateLoadBalancerNodePorts: true
-  internalTrafficPolicy: Cluster
-EOF
-kubectl apply -f /tmp/openstack_lb.yaml
-
 tee > /tmp/ceph_adpater.yaml <<EOF
 ceph_cluster_namespace: rook-ceph
 admin_secret_namespace: rook-ceph
