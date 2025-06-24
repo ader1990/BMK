@@ -2,22 +2,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ .Values.ingress-nginx.name }}
+  name: {{ .Values.ingress_nginx.name }}
 spec:
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
       - CreateNamespace=true
   destination:
-    namespace: {{ .Values.ingress-nginx.namespace }}
+    namespace: {{ .Values.ingress_nginx.namespace }}
     server: https://192.168.56.151:6443
   project: default
   source:
     chart: ingress-nginx
     repoURL: https://kubernetes.github.io/ingress-nginx
-    targetRevision: {{ .Values.ingress-nginx.version }}
+    targetRevision: {{ .Values.ingress_nginx.version }}
     helm:
       valueFiles:
         - values.yaml
       values: |-
-        {{- toYaml .Values.ingress-nginx.values | nindent 8 }}
+        {{- toYaml .Values.ingress_nginx.values | nindent 8 }}

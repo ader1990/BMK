@@ -1268,7 +1268,7 @@ cluster:
           parameters:
             # note: objectStoreNamespace and objectStoreName are configured by the chart
             region: us-east-1
-ingress-nginx:
+ingress_nginx:
   name: ingress-nginx
   namespace: openstack
   version: 4.8.3
@@ -1287,4 +1287,4 @@ ingress-nginx:
         default: false
       ingressClass: nginx
       labels:
-        app: ingress-api    
+        app: ingress-api
