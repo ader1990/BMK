@@ -14,7 +14,7 @@ spec:
   project: default
   source:
     chart: keystone
-    repoURL: https://tarballs.opendev.org/openstack/openstack-helm
+    repoURL: https://raw.githubusercontent.com/ader1990/openstack-helm/refs/heads/flatcar_june_2025
     targetRevision: {{ .Values.openstack_keystone.version }}
     helm:
       valueFiles:
