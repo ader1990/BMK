@@ -14,6 +14,14 @@ kubectl label --overwrite nodes --all openstack-compute-node=enabled
 kubectl label --overwrite nodes --all openvswitch=enabled
 kubectl label --overwrite nodes --all linuxbridge=enabled
 
+
+# use argocd
+
+argocd app sync ingress-nginx-wkld
+argocd app sync openstack-lb
+
+# use local helm
+
 helm repo add openstack-helm https://tarballs.opendev.org/openstack/openstack-helm
 helm plugin install https://opendev.org/openstack/openstack-helm-plugin || helm plugin update osh || true
 
