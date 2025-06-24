@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: public-openstack
+  namespace: openstack
+  labels:
+    app.kubernetes.io/advertise: "true"
+spec:
+  externalTrafficPolicy: Cluster
+  selector:
+    app: ingress-api
+  ports:
+    - name: http
+      port: 80
+    - name: https
+      port: 443
+  type: LoadBalancer
+  allocateLoadBalancerNodePorts: true
+  internalTrafficPolicy: Cluster
+  clusterIP: 192.168.56.149 

@@ -1288,3 +1288,5 @@ ingress_nginx_wkld:
       ingressClass: nginx
       labels:
         app: ingress-api
+openstack_lb:
+  key: value
