@@ -1,0 +1,23 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.openstack_nova.name }}
+spec:
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+  destination:
+    namespace: {{ .Values.openstack_nova.namespace }}
+    server: https://192.168.56.151:6443
+  project: default
+  source:
+    chart: nova
+    repoURL: https://raw.githubusercontent.com/ader1990/openstack-helm/refs/heads/flatcar_june_2025
+    targetRevision: {{ .Values.openstack_nova.version }}
+    helm:
+      valueFiles:
+        - values.yaml
+      values: |-
+        {{- toYaml .Values.openstack_nova.values | nindent 8 }}
