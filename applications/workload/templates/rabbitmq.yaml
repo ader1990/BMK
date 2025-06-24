@@ -13,7 +13,7 @@ spec:
     server: https://192.168.56.151:6443
   project: default
   source:
-    chart: openstack-helm/rabbitmq
+    chart: rabbitmq
     repoURL: https://tarballs.opendev.org/openstack/openstack-helm
     targetRevision: {{ .Values.rabbitmq.version }}
     helm:
