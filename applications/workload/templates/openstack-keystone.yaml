@@ -1,0 +1,23 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.openstack_keystone.name }}
+spec:
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+  destination:
+    namespace: {{ .Values.openstack_keystone.namespace }}
+    server: https://192.168.56.151:6443
+  project: default
+  source:
+    chart: keystone
+    repoURL: https://tarballs.opendev.org/openstack/openstack-helm
+    targetRevision: {{ .Values.openstack_keystone.version }}
+    helm:
+      valueFiles:
+        - values.yaml
+      values: |-
+        {{- toYaml .Values.openstack_keystone.values | nindent 8 }}
