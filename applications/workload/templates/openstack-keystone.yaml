@@ -17,6 +17,7 @@ spec:
     repoURL: https://raw.githubusercontent.com/ader1990/openstack-helm/refs/heads/flatcar_june_2025
     targetRevision: {{ .Values.openstack_keystone.version }}
     helm:
+      version: v3
       valueFiles:
         - values.yaml
       values: |-
