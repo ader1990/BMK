@@ -172,8 +172,8 @@ argocd app sync machine
 # sleep 30
 # ipmitool -I lanplus -U admin -P admin -H 192.168.56.1 -p 623 chassis bootdev disk options=persistent
 
-clusterctl get kubeconfig kub-poc -n tink-system > ~/kub-poc.kubeconfig || sleep 100 || clusterctl get kubeconfig kub-poc -n tink-system > ~/kub-poc.kubeconfig
-until kubectl --kubeconfig ~/kub-poc.kubeconfig get node -A; do sleep 1; done
+clusterctl get kubeconfig kub-poc -n tink-system > ~/kub-poc.kubeconfig
+until kubectl --kubeconfig ~/kub-poc.kubeconfig get node -A; do sleep 1 && clusterctl get kubeconfig kub-poc -n tink-system > ~/kub-poc.kubeconfig; done
 
 until kubectl --kubeconfig ~/kub-poc.kubeconfig get node vm01; do sleep 1; done
 
