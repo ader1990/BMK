@@ -147,6 +147,7 @@ Once connected via SSH to the controller management node:
   * management: manual: configure install-k8s-all.sh according to your extra requirements, if needed
   * management: manual: execute install-k8s-all.sh:
 
+
     * management: automated: install Docker
     * management: automated: download all required binaries: k3d, kubectl, helm, clusterctl, argocd
     * management: automated: install ArgoCD
@@ -154,3 +155,6 @@ Once connected via SSH to the controller management node:
     * management: automated: install CAPI + CAPT services using clusterctl
     * management: automated: deploy Workload Cluster as ArgoCD application
 
+### OpenStack on K8s
+
+![openk8s](https://github.com/user-attachments/assets/b412f5cf-1b39-4979-a75a-1d79fff6b92b)
