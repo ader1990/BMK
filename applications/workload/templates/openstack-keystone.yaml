@@ -17,6 +17,7 @@ spec:
     path: keystone
     targetRevision: flatcar_june_2025
     helm:
+      version: v3
       valueFiles:
         - values.yaml
       values: |-
