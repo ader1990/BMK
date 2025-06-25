@@ -119,7 +119,6 @@ Once connected via SSH to the controller management node:
   * bash install-k8s-all.sh
   * Libvirt vbmc implementation is flaky, you can use the virsh start/stop and vnc client to make sure the VMs pxe boot correctly
 
-```
 
 #### Management K8S cluster:
 
@@ -155,6 +154,6 @@ Once connected via SSH to the controller management node:
     * management: automated: install CAPI + CAPT services using clusterctl
     * management: automated: deploy Workload Cluster as ArgoCD application
 
-### OpenStack on K8s
+### OpenStack on K8s:
 
 ![openk8s](https://github.com/user-attachments/assets/b412f5cf-1b39-4979-a75a-1d79fff6b92b)
