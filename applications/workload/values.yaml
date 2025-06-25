@@ -1323,6 +1323,8 @@ openstack_keystone:
   namespace: openstack
   version: 2025.1.0
   values:
+    manifests:
+      job_db_init: true
     images:
       tags:
         bootstrap: "quay.io/airshipit/heat:2025.1-ubuntu_noble"
