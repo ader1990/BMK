@@ -81,6 +81,7 @@ k3d cluster list k3s-default || k3d cluster create --network host --no-lb --k3s-
 
 mkdir -p ~/.kube/
 k3d kubeconfig get -a >~/.kube/config
+unset KUBECONFIG
 until kubectl wait --for=condition=Ready nodes --all --timeout=600s; do sleep 1; done
 
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
