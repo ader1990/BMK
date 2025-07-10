@@ -29,7 +29,7 @@ create_controller() {
     [ -f /var/lib/libvirt/images/controller-test.qcow2 ] || \
         wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img \
         -O /var/lib/libvirt/images/controller-test.qcow2
-    qemu-img resize /var/lib/libvirt/images/controller-test.qcow2 +30G
+    qemu-img resize /var/lib/libvirt/images/controller-test.qcow2 +250G
     cp libvirt/cloud-init.iso /var/lib/libvirt/images/cloud-init.iso
     virsh define libvirt/controller.xml
 }
@@ -37,8 +37,8 @@ create_controller() {
 create_machine() {
     virsh destroy $1 || true
     virsh undefine $1 || true
-    qemu-img create -f qcow2 /var/lib/libvirt/images/$1.qcow2 40G
-    qemu-img create -f qcow2 /var/lib/libvirt/images/$1-disk2.qcow2 20G
+    qemu-img create -f qcow2 /var/lib/libvirt/images/$1.qcow2 250G
+    qemu-img create -f qcow2 /var/lib/libvirt/images/$1-disk2.qcow2 200G
     virsh define libvirt/$1.xml
 }
 
