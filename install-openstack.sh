@@ -88,7 +88,22 @@ tee ${OVERRIDES_DIR}/glance/glance_pvc_storage.yaml <<EOF
 storage: pvc
 volume:
   class_name: general
-  size: 10Gi
+  size: 100Gi
+pod:
+  probes:
+    api:
+      glance-api:
+        readiness:
+          enabled: true
+          params:
+            periodSeconds: 10
+            timeoutSeconds: 5
+        liveness:
+          enabled: true
+          params:
+            initialDelaySeconds: 120
+            periodSeconds: 300
+            timeoutSeconds: 600
 EOF
 
 helm upgrade --install glance openstack-helm/glance \
