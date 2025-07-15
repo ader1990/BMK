@@ -9,6 +9,8 @@ kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm01 -p '{"spec":{"taints":
 kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm02 -p '{"spec":{"taints":[]}}' || true
 kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm03 -p '{"spec":{"taints":[]}}' || true
 
+until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+
 kubectl label --overwrite nodes --all openstack-control-plane=enabled
 kubectl label --overwrite nodes --all openstack-compute-node=enabled
 kubectl label --overwrite nodes --all openvswitch=enabled
@@ -19,7 +21,7 @@ kubectl label --overwrite nodes --all linuxbridge=enabled
 
 argocd app sync openstack-ingress-nginx
 argocd app sync openstack-public-ip
-argocd app sync openstack-rabbitmq
+# argocd app sync openstack-rabbitmq
 
 # use local helm
 

@@ -251,7 +251,7 @@ argocd app sync cilium-kub-poc || true
 # until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kubevirt virt-api --for condition=Available=True --timeout=90s; do sleep 1; done
 # until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kubevirt virt-operator --for condition=Available=True --timeout=90s; do sleep 1; done
 
-# until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
 
 # argocd app sync testvm --force --prune || argocd app sync testvm --force --prune
 
@@ -263,4 +263,4 @@ until (curl --connect-timeout 5 --fail-with-body $(kubectl --kubeconfig ~/kub-po
 
 # until nc -w5 -z -v $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/fedora-public-ip -o yaml | yq .status.loadBalancer.ingress[0].ip) 22; do sleep 1; done;
 
-until curl --connect-timeout 5 --fail-with-body $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/nginx -n nginx -o yaml | yq .status.loadBalancer.ingress[0].ip); do sleep 1; done
+# until curl --connect-timeout 5 --fail-with-body $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/nginx -n nginx -o yaml | yq .status.loadBalancer.ingress[0].ip); do sleep 1; done
