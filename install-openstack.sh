@@ -47,9 +47,17 @@ rm -rf $OVERRIDES_DIR
 export OVERRIDES_URL=https://opendev.org/openstack/openstack-helm/raw/branch/master/values_overrides
 
 OVERRIDES_URL=https://opendev.org/openstack/openstack-helm/raw/branch/master/values_overrides
-for chart in mariadb memcached openvswitch libvirt keystone heat glance cinder placement nova neutron horizon; do
+for chart in rabbitmq mariadb memcached openvswitch libvirt keystone heat glance cinder placement nova neutron horizon; do
     helm osh get-values-overrides -d -u ${OVERRIDES_URL} -p ${OVERRIDES_DIR} -c ${chart} ${FEATURES}
 done
+
+helm upgrade --install rabbitmq openstack-helm/rabbitmq \
+    --namespace=openstack \
+    --set pod.replicas.server=1 \
+    --timeout=600s \
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c rabbitmq ${FEATURES})
+
+helm osh wait-for-pods openstack
 
 helm upgrade --install mariadb openstack-helm/mariadb \
     --namespace=openstack \
