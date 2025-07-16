@@ -1,7 +1,7 @@
 <domain type='kvm' id='4'>
   <name>machine1</name>
   <uuid>a3478e0f-432c-4234-9c09-d87468d3d95f</uuid>
-  <memory unit='GiB'>64</memory>
+  <memory unit='GiB'>128</memory>
   <vcpu placement='static'>32</vcpu>
   <resource>
     <partition>/machine</partition>
@@ -15,29 +15,7 @@
     <apic/>
     <pae/>
   </features>
-  <cpu mode='custom' match='exact' check='full'>
-    <model fallback='forbid'>Haswell-noTSX-IBRS</model>
-    <vendor>Intel</vendor>
-    <feature policy='require' name='vme'/>
-    <feature policy='require' name='ss'/>
-    <feature policy='require' name='vmx'/>
-    <feature policy='require' name='f16c'/>
-    <feature policy='require' name='rdrand'/>
-    <feature policy='require' name='hypervisor'/>
-    <feature policy='require' name='arat'/>
-    <feature policy='require' name='tsc_adjust'/>
-    <feature policy='require' name='umip'/>
-    <feature policy='require' name='stibp'/>
-    <feature policy='require' name='arch-capabilities'/>
-    <feature policy='require' name='ssbd'/>
-    <feature policy='require' name='xsaveopt'/>
-    <feature policy='require' name='abm'/>
-    <feature policy='require' name='ibpb'/>
-    <feature policy='require' name='ibrs'/>
-    <feature policy='require' name='amd-stibp'/>
-    <feature policy='require' name='amd-ssbd'/>
-    <feature policy='require' name='skip-l1dfl-vmentry'/>
-    <feature policy='require' name='pschange-mc-no'/>
+  <cpu mode='host-passthrough' migratable='off'>
   </cpu>
   <clock offset='utc'/>
   <on_poweroff>destroy</on_poweroff>
