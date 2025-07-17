@@ -220,7 +220,7 @@ wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.i
 openstack --os-cloud openstack_helm image create ubuntu-noble --disk-format qcow2 --container-format bare --file noble-server-cloudimg-amd64.img
 
 KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c 'chmod 777 /dev/kvm'
-openstack --os-cloud openstack_helm server create --image 'ubuntu-noble' --flavor m1.sylva --network private ubuntu-sylva
+openstack --os-cloud openstack_helm server create --image 'ubuntu-noble' --flavor m1.sylva --network private ubuntu-sylva --key sylva
 
 openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.192 --subnet public public
 openstack --os-cloud openstack_helm server add floating ip ubuntu-sylva 192.168.56.192
