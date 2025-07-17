@@ -31,7 +31,7 @@ create_controller() {
         -O /var/lib/libvirt/images/controller-test.qcow2
     qemu-img resize /var/lib/libvirt/images/controller-test.qcow2 +250G
     cp libvirt/cloud-init.iso /var/lib/libvirt/images/cloud-init.iso
-    virsh define libvirt/controller.xml
+    virsh define libvirt/controller-virt.xml
 }
 
 create_machine() {
@@ -39,7 +39,7 @@ create_machine() {
     virsh undefine $1 || true
     qemu-img create -f raw /mnt/tmpfs/$1.raw 80G
     qemu-img create -f qcow2 /var/lib/libvirt/images/$1-disk2.qcow2 200G
-    virsh define libvirt/$1.xml
+    virsh define libvirt/$1-virt.xml
 }
 
 create_bmc_machine() {
