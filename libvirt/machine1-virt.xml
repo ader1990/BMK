@@ -6,9 +6,8 @@
       <libosinfo:os id="http://ubuntu.com/ubuntu/24.10"/>
     </libosinfo:libosinfo>
   </metadata>
-  <memory unit='KiB'>4194304</memory>
-  <currentMemory unit='KiB'>4194304</currentMemory>
-  <vcpu placement='static'>8</vcpu>
+  <memory unit='GiB'>128</memory>
+  <vcpu placement='static'>32</vcpu>
   <resource>
     <partition>/machine</partition>
   </resource>
@@ -38,9 +37,19 @@
       <driver name='qemu' type='qcow2'/>
       <source file='/var/lib/libvirt/images/machine1.qcow2' index='1'/>
       <backingStore/>
+      <boot order='1'/>
       <target dev='vda' bus='virtio'/>
       <alias name='virtio-disk0'/>
       <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>
+    </disk>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='/var/lib/libvirt/images/machine1-disk2.qcow2' index='3'/>
+      <backingStore/>
+      <target dev='vdb' bus='virtio'/>
+      <boot order='3'/>
+      <alias name='ua-disk-volume-1'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
     </disk>
     <controller type='usb' index='0' model='qemu-xhci' ports='15'>
       <alias name='usb'/>
@@ -145,6 +154,7 @@
       <mac address='08:00:27:9e:f5:3a'/>
       <source network='tink_network'/>
       <target dev='vnet2'/>
+      <boot order='2'/>
       <model type='virtio'/>
       <driver iommu='off'/>
       <boot order='2'/>
