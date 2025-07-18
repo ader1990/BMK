@@ -13,7 +13,7 @@
     <partition>/machine</partition>
   </resource>
   <os>
-    <type arch='x86_64' machine='ubuntu-q35'>hvm</type>
+    <type arch='x86_64' machine='pc-i440fx-focal'>hvm</type>
   </os>
   <features>
     <acpi/>
@@ -38,27 +38,26 @@
       <driver name='qemu' type='qcow2' cache='none' io='native'/>
       <source file='/var/lib/libvirt/images/controller-test2.qcow2' index='1'/>
       <backingStore/>
-      <target dev='vda' bus='virtio'/>
+      <target dev='sda' bus='sata'/>
       <alias name='virtio-disk0'/>
-      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>
+      <address type='drive' controller='0' bus='0' target='0' unit='0'/>
     </disk>
+
     <controller type='usb' index='0' model='qemu-xhci' ports='15'>
       <alias name='usb'/>
-      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
     </controller>
-    <controller type='pci' index='0' model='pcie-root'>
+    <controller type='pci' index='0' model='pci-root'>
       <alias name='pcie.0'/>
     </controller>
 <disk type='file' device='cdrom'>
       <driver name='qemu' type='raw'/>
       <source file='/var/lib/libvirt/images/cloud-init.iso'/>
-      <target dev='sda' bus='sata'/>
+      <target dev='sdb' bus='sata'/>
       <readonly/>
-      <address type='drive' controller='0' bus='0' target='0' unit='0'/>
+      <address type='drive' controller='1' bus='0' target='0' unit='0'/>
 </disk>
     <controller type='virtio-serial' index='0'>
       <alias name='virtio-serial0'/>
-      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>
     </controller>
     <interface type='network'>
       <mac address='52:54:01:e7:3b:5d'/>
@@ -66,7 +65,6 @@
       <target dev='vnet5'/>
       <model type='virtio'/>
       <alias name='net0'/>
-      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
     </interface>
     <serial type='pty'>
       <source path='/dev/pts/4'/>
@@ -103,20 +101,7 @@
     <video>
       <model type='virtio' heads='1' primary='yes'/>
       <alias name='video0'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>
     </video>
-    <watchdog model='itco' action='reset'>
-      <alias name='watchdog0'/>
-    </watchdog>
-    <memballoon model='virtio'>
-      <alias name='balloon0'/>
-      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>
-    </memballoon>
-    <rng model='virtio'>
-      <backend model='random'>/dev/urandom</backend>
-      <alias name='rng0'/>
-      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>
-    </rng>
   </devices>
 </domain>
 
