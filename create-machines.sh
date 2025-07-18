@@ -37,7 +37,7 @@ create_controller() {
 create_machine() {
     virsh destroy $1 || true
     virsh undefine $1 || true
-    qemu-img create -f raw /mnt/tmpfs/$1.raw 80G
+    qemu-img create -f qcow2 /var/lib/libvirt/images/$1.qcow2 200G
     qemu-img create -f qcow2 /var/lib/libvirt/images/$1-disk2.qcow2 200G
     virsh define libvirt/$1-virt.xml
 }

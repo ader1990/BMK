@@ -47,7 +47,7 @@
       <source file='/var/lib/libvirt/images/machine1-disk2.qcow2' index='3'/>
       <backingStore/>
       <target dev='vdb' bus='virtio'/>
-      <boot order='3'/>
+      <boot order='2'/>
       <alias name='ua-disk-volume-1'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
     </disk>
@@ -154,10 +154,10 @@
       <mac address='08:00:27:9e:f5:3a'/>
       <source network='tink_network'/>
       <target dev='vnet2'/>
-      <boot order='2'/>
+      <boot order='3'/>
       <model type='virtio'/>
       <driver iommu='off'/>
-      <boot order='2'/>
+      <boot order='3'/>
       <alias name='ua-net-1'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
     </interface>
