@@ -38,7 +38,7 @@
       <driver name='qemu' type='qcow2' cache='none' io='native'/>
       <source file='/var/lib/libvirt/images/controller-test2.qcow2' index='1'/>
       <backingStore/>
-      <target dev='sda' bus='sata'/>
+      <target dev='sda' bus='ide'/>
       <alias name='virtio-disk0'/>
       <address type='drive' controller='0' bus='0' target='0' unit='0'/>
     </disk>
