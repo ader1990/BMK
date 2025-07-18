@@ -38,9 +38,13 @@
       <driver name='qemu' type='raw' cache='none' io='native'/>
       <source dev="/dev/sdb" index='1'/>
       <backingStore/>
-      <target dev='vda' bus='virtio'/>
+      <target dev='sda' bus='scsi'/>
       <alias name='virtio-disk0'/>
-    </disk>
+
+      </disk>
+      <controller type='scsi' index='0' model='virtio-scsi'>
+	      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
+      </controller>
 
     <controller type='usb' index='0' model='qemu-xhci' ports='15'>
       <alias name='usb'/>
