@@ -19,7 +19,9 @@
     <acpi/>
     <apic/>
   </features>
-  <cpu mode='host-passthrough' check='none' migratable='on'/>
+    <cpu mode="host-passthrough" check="full" migratable="off">
+		    <cache mode="passthrough"/>
+		      </cpu>
   <clock offset='utc'>
     <timer name='rtc' tickpolicy='catchup'/>
     <timer name='pit' tickpolicy='delay'/>
@@ -41,8 +43,7 @@
 		      <disk type='file' device='disk'>
 			      <source file='/mnt/tmpfs/controller-test2.raw'/>
 
-      <driver name='qemu' type='raw' cache='none' io='native'/>
-      <backingStore/>
+      <driver name='qemu' type='raw'/>
       <target dev='sda' bus='scsi'/>
       <alias name='virtio-disk0'/>
       <driver iommu='on' ats='on'/>
