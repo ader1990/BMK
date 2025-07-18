@@ -39,7 +39,7 @@
 	  <emulator>/usr/bin/qemu-system-x86_64</emulator>
 
 		      <disk type='file' device='disk'>
-			      <source file='/var/lib/libvirt/images/controller-test2.raw'/>
+			      <source file='/mnt/tmpfs/controller-test2.raw'/>
 
       <driver name='qemu' type='raw' cache='none' io='native'/>
       <backingStore/>
