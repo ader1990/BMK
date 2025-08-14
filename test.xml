@@ -13,13 +13,15 @@
     <partition>/machine</partition>
   </resource>
   <os>
-    <type arch='x86_64' machine='pc-i440fx-focal'>hvm</type>
+    <type arch='x86_64' machine='q35'>hvm</type>
   </os>
   <features>
     <acpi/>
     <apic/>
   </features>
-  <cpu mode='host-passthrough' check='none' migratable='on'/>
+    <cpu mode="host-passthrough" check="full" migratable="off">
+		    <cache mode="passthrough"/>
+		      </cpu>
   <clock offset='utc'>
     <timer name='rtc' tickpolicy='catchup'/>
     <timer name='pit' tickpolicy='delay'/>
@@ -32,15 +34,19 @@
     <suspend-to-mem enabled='no'/>
     <suspend-to-disk enabled='no'/>
   </pm>
+     <iommu model='intel'>
+	           <driver intremap='on' iotlb='on'/>
+		      </iommu>
   <devices>
 	  <emulator>/usr/bin/qemu-system-x86_64</emulator>
-    <disk type='block' device='disk'>
-      <driver name='qemu' type='raw' cache='none' io='native'/>
-      <source dev="/dev/sdb" index='1'/>
-      <backingStore/>
+
+		      <disk type='file' device='disk'>
+			      <source file='/var/lib/libvirt/images/controller-test2.raw'/>
+
+      <driver name='qemu' type='raw' cache="none"/>
       <target dev='sda' bus='scsi'/>
       <alias name='virtio-disk0'/>
-
+      <driver iommu='on' ats='on'/>
       </disk>
       <controller type='scsi' index='0' model='virtio-scsi'>
 	      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
@@ -49,7 +55,7 @@
     <controller type='usb' index='0' model='qemu-xhci' ports='15'>
       <alias name='usb'/>
     </controller>
-    <controller type='pci' index='0' model='pci-root'>
+    <controller type='pci' index='0' model='pcie-root'>
       <alias name='pcie.0'/>
     </controller>
 <disk type='file' device='cdrom'>
