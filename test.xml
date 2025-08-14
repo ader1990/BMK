@@ -43,7 +43,7 @@
 		      <disk type='file' device='disk'>
 			      <source file='/var/lib/libvirt/images/controller-test2.raw'/>
 
-      <driver name='qemu' type='raw'/>
+      <driver name='qemu' type='raw' cache="none"/>
       <target dev='sda' bus='scsi'/>
       <alias name='virtio-disk0'/>
       <driver iommu='on' ats='on'/>
