@@ -70,7 +70,7 @@ spec:
         kubeletExtraArgs:
           provider-id: PROVIDER_ID
     preKubeadmCommands:
-      - "until ping cloudbase.it -c 2 -t 100; do sleep 1; done && mkdir -p /etc/kubernetes/manifests && ctr images pull ghcr.io/kube-vip/kube-vip:v0.7.2 && ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:v0.7.2 vip /kube-vip manifest pod --arp --interface $(ip -4 -j route list default | jq -r .[0].dev) --address 192.168.56.151 --controlplane --leaderElection > /etc/kubernetes/manifests/kube-vip.yaml"
+      - "mkdir -p /var/lib/containerd && systemctl stop containerd && mount -o size=20G -t tmpfs none /var/lib/containerd && systemctl start containerd;until ping cloudbase.it -c 2 -t 100; do sleep 1; done && mkdir -p /etc/kubernetes/manifests && ctr images pull ghcr.io/kube-vip/kube-vip:v0.7.2 && ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:v0.7.2 vip /kube-vip manifest pod --arp --interface $(ip -4 -j route list default | jq -r .[0].dev) --address 192.168.56.151 --controlplane --leaderElection > /etc/kubernetes/manifests/kube-vip.yaml"
       - "sed -i 's#path: /etc/kubernetes/admin.conf#path: /etc/kubernetes/super-admin.conf#' /etc/kubernetes/manifests/kube-vip.yaml"
     postKubeadmCommands:
       - "sed -i 's#path: /etc/kubernetes/super-admin.conf#path: /etc/kubernetes/admin.conf#' /etc/kubernetes/manifests/kube-vip.yaml"
