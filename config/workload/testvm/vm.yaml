@@ -1,3 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-vm
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: general
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -39,10 +52,17 @@ spec:
           bus: virtio
         name: emptydisk
         dedicatedIOThread: true
+      - disk:
+          bus: virtio
+        name: mypvcdisk
+        dedicatedIOThread: true
     resources:
       requests:
         memory: 4Gi
   volumes:
+  - name: mypvcdisk
+    persistentVolumeClaim:
+      claimName: pvc-vm
   - emptyDisk:
       capacity: 1Gi
     name: emptydisk
