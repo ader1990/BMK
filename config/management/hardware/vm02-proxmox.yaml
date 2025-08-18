@@ -6,7 +6,7 @@ metadata:
     rack: amd64
 spec:
   disks:
-    - device: /dev/sda1
+    - device: /dev/vda1
   metadata:
     facility:
       facility_code: sandbox

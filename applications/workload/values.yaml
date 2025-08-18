@@ -4,11 +4,11 @@ wordpress:
   version: 15.2.55
   values:
     persistence:
-      storageClass: "general"
+      storageClass: "ceph-block"
     mariadb:
       primary:
         persistence:
-          storageClass: "general"
+          storageClass: "ceph-block"
 cilium:
   name: cilium-kub-poc
   namespace: kube-system
@@ -830,7 +830,7 @@ cluster:
           # Requires a kernel that supports msgr v2 (kernel 5.11 or CentOS 8.4 or newer).
           requireMsgr2: false
       #   # enable host networking
-          provider: host
+      #   provider: host
       #   # EXPERIMENTAL: enable the Multus network provider
       #   provider: multus
       #   selectors:
@@ -938,22 +938,22 @@ cluster:
       resources:
         mgr:
           limits:
-            cpu: "4000m"
-            memory: "4Gi"
+            cpu: "1000m"
+            memory: "1Gi"
           requests:
             cpu: "500m"
             memory: "512Mi"
         mon:
           limits:
-            cpu: "4000m"
-            memory: "4Gi"
+            cpu: "2000m"
+            memory: "2Gi"
           requests:
             cpu: "1000m"
             memory: "1Gi"
         osd:
           limits:
-            cpu: "4000m"
-            memory: "8Gi"
+            cpu: "2000m"
+            memory: "4Gi"
           requests:
             cpu: "1000m"
             memory: "4Gi"
@@ -1010,7 +1010,7 @@ cluster:
       storage: # cluster level storage configuration and selection
         useAllNodes: true
         useAllDevices: true
-        devicePathFilter: "/dev/sdb"
+        devicePathFilter: "/dev/vdb"
         onlyApplyOSDPlacement: false
         # deviceFilter:
         # config:
@@ -1107,7 +1107,7 @@ cluster:
           # enableRBDStats: true
         storageClass:
           enabled: true
-          name: general
+          name: ceph-block
           isDefault: true
           reclaimPolicy: Delete
           allowVolumeExpansion: true
@@ -1222,7 +1222,7 @@ cluster:
     # @default -- See [RBD Snapshots](../Storage-Configuration/Ceph-CSI/ceph-csi-snapshot.md#rbd-snapshots)
     cephBlockPoolsVolumeSnapshotClass:
       enabled: true
-      name: general
+      name: ceph-block
       isDefault: true
       deletionPolicy: Delete
       annotations: {}

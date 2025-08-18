@@ -108,13 +108,13 @@ spec:
                 timeout: 600
                 environment:
                   IMG_URL: http://192.168.56.1/flatcar_production_image.bin.bzip2
-                  DEST_DISK: /dev/sda
+                  DEST_DISK: /dev/vda
                   COMPRESSED: true
               - name: "change-kernel-configuration"
                 image: quay.io/tinkerbell-actions/writefile:v1.0.0
                 timeout: 90
                 environment:
-                  DEST_DISK: /dev/sda6
+                  DEST_DISK: /dev/vda6
                   FS_TYPE: btrfs
                   DEST_PATH: /grub.cfg
                   UID: 0
