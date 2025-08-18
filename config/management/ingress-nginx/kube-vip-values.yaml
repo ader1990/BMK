@@ -5,7 +5,7 @@ image:
 config:
   address: ''
 env:
-  vip_interface: ens6
+  vip_interface: enp5s0
   vip_arp: 'true'
   lb_enable: 'true'
   lb_port: '6443'
