@@ -23,18 +23,29 @@ metadata:
     special: fedora-vm
 spec:
   domain:
+    ioThreadsPolicy: shared
+    cpu:
+      cores: 8
     devices:
       disks:
       - disk:
           bus: virtio
         name: containerdisk
+        dedicatedIOThread: true
       - disk:
           bus: virtio
         name: cloudinitdisk
+      - disk:
+          bus: virtio
+        name: emptydisk
+        dedicatedIOThread: true
     resources:
       requests:
-        memory: 1Gi
+        memory: 4Gi
   volumes:
+  - emptyDisk:
+      capacity: 1Gi
+    name: emptydisk
   - name: containerdisk
     containerDisk:
       image: quay.io/kubevirt/fedora-cloud-container-disk-demo:20210811_9fec1f849
