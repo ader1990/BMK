@@ -1,0 +1,258 @@
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: kub-poc-control-plane
+  namespace: tink-system
+spec:
+  kubeadmConfigSpec:
+    clusterConfiguration: {}
+
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          provider-id: PROVIDER_ID
+    joinConfiguration:
+      nodeRegistration:
+        ignorePreflightErrors:
+          - DirAvailable--etc-kubernetes-manifests
+        kubeletExtraArgs:
+          provider-id: PROVIDER_ID
+    preKubeadmCommands:
+      - "until ping cloudbase.it -c 2 -t 100; do sleep 1; done && mkdir -p /etc/kubernetes/manifests && ctr images pull ghcr.io/kube-vip/kube-vip:v1.0.0 && ctr run --rm --net-host ghcr.io/kube-vip/kube-vip:v1.0.0 vip /kube-vip manifest pod --arp --interface $(ip -4 -j route list default | jq -r .[0].dev) --address 192.168.56.151 --controlplane --leaderElection > /etc/kubernetes/manifests/kube-vip.yaml"
+      - "sed -i 's#path: /etc/kubernetes/admin.conf#path: /etc/kubernetes/super-admin.conf#' /etc/kubernetes/manifests/kube-vip.yaml"
+    postKubeadmCommands:
+      - "sed -i 's#path: /etc/kubernetes/super-admin.conf#path: /etc/kubernetes/admin.conf#' /etc/kubernetes/manifests/kube-vip.yaml"
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      kind: TinkerbellMachineTemplate
+      name: kub-poc-control-plane
+  replicas: 1
+  version: v1.32.4
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: TinkerbellMachineTemplate
+metadata:
+  name: kub-poc-control-plane
+  namespace: tink-system
+spec:
+  template:
+    spec:
+      templateOverride: | 
+        version: "0.1"
+        name: kub-poc-control-plane-ubuntu
+        global_timeout: 6000
+        tasks:
+          - name: "kub-poc-control-plane-ubuntu"
+            worker: "{{.device_1}}"
+            volumes:
+              - /dev:/dev
+              - /dev/console:/dev/console
+              - /lib/firmware:/lib/firmware:ro
+            actions:
+              - name: "stream-image"
+                image: quay.io/tinkerbell-actions/image2disk:v1.0.0
+                timeout: 600
+                environment:
+                  IMG_URL: http://192.168.56.1/ubuntu-2204-kube-v1.32.4.gz
+                  DEST_DISK: /dev/sda
+                  COMPRESSED: true
+              - name: "add-tink-cloud-init-config"
+                image: quay.io/tinkerbell-actions/writefile:v1.0.0
+                timeout: 90
+                environment:
+                  DEST_DISK: /dev/sda1
+                  FS_TYPE: ext4
+                  DEST_PATH: /etc/cloud/cloud.cfg.d/10_tinkerbell.cfg
+                  UID: 0
+                  GID: 0
+                  MODE: 0600
+                  DIRMODE: 0700
+                  CONTENTS: |
+                    datasource:
+                      Ec2:
+                        metadata_urls: ["http://192.168.56.130:50061"]
+                        strict_id: false
+                      system_info:
+                        default_user:
+                          name: tink
+                          groups: [wheel, adm]
+                          sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+                          shell: /bin/bash
+                          passwd: $6$5sWnlCLiijc66vJs$zf4wEqIgnILCaaL1iEULMvnADZI7pD9WbzJhy6DWScMDRz9AYflOiJ.qVUIFE1U5wjS8pzKlIfbY102rgjXDT1
+                          lock_passwd: false
+                      manage_etc_hosts: localhost
+                      warnings:
+                        dsid_missing_source: off
+              - name: "add-tink-cloud-init-ds-config"
+                image: quay.io/tinkerbell-actions/writefile:v1.0.0
+                timeout: 90
+                environment:
+                  DEST_DISK: /dev/sda1
+                  FS_TYPE: ext4
+                  DEST_PATH: /etc/cloud/ds-identify.cfg
+                  UID: 0
+                  GID: 0
+                  MODE: 0600
+                  DIRMODE: 0700
+                  CONTENTS: |
+                    datasource: Ec2
+              - name: "reboot"
+                image: tinkerbell.azurecr.io/tinkerbell/reboot:1.0
+                timeout: 90
+                volumes:
+                  - /worker:/worker
+
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: kub-poc
+  namespace: tink-system
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.167.0.0/16
+    services:
+      cidrBlocks:
+      - 172.26.0.0/16
+  controlPlaneEndpoint:
+    host: 192.168.56.151
+    port: 6443
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: kub-poc-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: TinkerbellCluster
+    name: kub-poc
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: TinkerbellCluster
+metadata:
+  name: kub-poc
+  namespace: tink-system
+spec:
+  imageLookupBaseRegistry: ""
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  labels:
+    cluster.x-k8s.io/cluster-name: kub-poc
+    pool: worker-a
+  name: kub-poc-worker-a
+  namespace: tink-system
+spec:
+  clusterName: kub-poc
+  replicas: 1
+  selector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: kub-poc
+      pool: worker-a
+  template:
+    metadata:
+      labels:
+        cluster.x-k8s.io/cluster-name: kub-poc
+        pool: worker-a
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: kub-poc-worker-a
+      clusterName: kub-poc
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: TinkerbellMachineTemplate
+        name: kub-poc-worker-a
+      version: v1.32.4
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: TinkerbellMachineTemplate
+metadata:
+  name: kub-poc-worker-a
+  namespace: tink-system
+spec:
+  template:
+    spec:
+      templateOverride: |
+        version: "0.1"
+        name: kub-poc-worker-ubuntu
+        global_timeout: 6000
+        tasks:
+          - name: "kub-poc-worker-ubuntu"
+            worker: "{{.device_1}}"
+            volumes:
+              - /dev:/dev
+              - /dev/console:/dev/console
+              - /lib/firmware:/lib/firmware:ro
+            actions:
+              - name: "stream-image"
+                image: quay.io/tinkerbell-actions/image2disk:v1.0.0
+                timeout: 600
+                environment:
+                  IMG_URL: http://192.168.56.1/ubuntu-2204-kube-v1.32.4.gz
+                  DEST_DISK: /dev/sda
+                  COMPRESSED: true
+              - name: "add-tink-cloud-init-config"
+                image: quay.io/tinkerbell-actions/writefile:v1.0.0
+                timeout: 90
+                environment:
+                  DEST_DISK: /dev/sda1
+                  FS_TYPE: ext4
+                  DEST_PATH: /etc/cloud/cloud.cfg.d/10_tinkerbell.cfg
+                  UID: 0
+                  GID: 0
+                  MODE: 0600
+                  DIRMODE: 0700
+                  CONTENTS: |
+                    datasource:
+                      Ec2:
+                        metadata_urls: ["http://192.168.56.130:50061"]
+                        strict_id: false
+                      system_info:
+                        default_user:
+                          name: tink
+                          groups: [wheel, adm]
+                          sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+                          shell: /bin/bash
+                          passwd: $6$5sWnlCLiijc66vJs$zf4wEqIgnILCaaL1iEULMvnADZI7pD9WbzJhy6DWScMDRz9AYflOiJ.qVUIFE1U5wjS8pzKlIfbY102rgjXDT1
+                          lock_passwd: false
+                      manage_etc_hosts: localhost
+                      warnings:
+                        dsid_missing_source: off
+              - name: "add-tink-cloud-init-ds-config"
+                image: quay.io/tinkerbell-actions/writefile:v1.0.0
+                timeout: 90
+                environment:
+                  DEST_DISK: /dev/sda1
+                  FS_TYPE: ext4
+                  DEST_PATH: /etc/cloud/ds-identify.cfg
+                  UID: 0
+                  GID: 0
+                  MODE: 0600
+                  DIRMODE: 0700
+                  CONTENTS: |
+                    datasource: Ec2
+              - name: "reboot"
+                image: tinkerbell.azurecr.io/tinkerbell/reboot:1.0
+                timeout: 90
+                volumes:
+                  - /worker:/worker
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: kub-poc-worker-a
+  namespace: tink-system
+spec:
+  template:
+    spec:
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            provider-id: PROVIDER_ID
+

@@ -153,7 +153,7 @@ providers:
     type: "InfrastructureProvider"
 EOF
 
-export EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION="true"
+# export EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION="true"
 clusterctl init --infrastructure tinkerbell -v 5
 
 until kubectl wait deployment -n capi-system capi-controller-manager --for condition=Available=True --timeout=90s; do sleep 1; done
