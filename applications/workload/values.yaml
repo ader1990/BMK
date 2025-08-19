@@ -12,7 +12,7 @@ wordpress:
 cilium:
   name: cilium-kub-poc
   namespace: kube-system
-  version: 1.15.4
+  version: 1.18.1
   values:
     l2announcements:
       enabled: true
