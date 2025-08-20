@@ -252,7 +252,7 @@ until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kubevirt virt
 
 until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
 
-argocd app sync testvm --force --prune || argocd app sync testvm --force --prune
+until argocd app sync testvm --force --prune; do sleep 1; done;
 
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait virtualmachineinstance/fedora-public-ip --for condition=Ready --timeout=90s; do sleep 1; done
 
