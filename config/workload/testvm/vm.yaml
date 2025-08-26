@@ -38,12 +38,13 @@ spec:
   domain:
     ioThreadsPolicy: shared
     cpu:
-      cores: 8
+      cores: 16
     devices:
       disks:
       - disk:
           bus: virtio
         name: containerdisk
+        cache: none
         dedicatedIOThread: true
       - disk:
           bus: virtio
@@ -52,13 +53,16 @@ spec:
           bus: virtio
         name: emptydisk
         dedicatedIOThread: true
+        cache: none
       - disk:
           bus: virtio
         name: mypvcdisk
         dedicatedIOThread: true
+        cache: none
     resources:
       requests:
         memory: 4Gi
+        cpu: 16
   volumes:
   - name: mypvcdisk
     persistentVolumeClaim:
