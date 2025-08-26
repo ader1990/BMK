@@ -12,6 +12,19 @@ spec:
   storageClassName: general
 ---
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-vm-fast
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  volumeMode: Block
+  storageClassName: general
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: fedora-public-ip
@@ -59,6 +72,11 @@ spec:
         name: mypvcdisk
         dedicatedIOThread: true
         cache: none
+      - disk:
+          bus: virtio
+        name: mypvcdiskfast
+        dedicatedIOThread: true
+        cache: none
     resources:
       requests:
         memory: 4Gi
@@ -67,6 +85,9 @@ spec:
   - name: mypvcdisk
     persistentVolumeClaim:
       claimName: pvc-vm
+  - name: mypvcdiskfast
+    persistentVolumeClaim:
+      claimName: pvc-vm-fast
   - emptyDisk:
       capacity: 1Gi
     name: emptydisk
