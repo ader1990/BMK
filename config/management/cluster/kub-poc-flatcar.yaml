@@ -58,6 +58,48 @@ spec:
                       [Unit]
                       Requires=containerd.service
                       After=containerd.service
+              - name: devkvm777.service
+                enabled: true
+                contents: |
+                  [Unit]
+                  Description=Ensure dev-kvm is writeable
+                  After=containerd.service
+
+                  [Service]
+                  ExecStart=/usr/sbin/chmod 777 /dev/kvm
+                  Restart=always
+                  RestartSec=10
+
+                  [Install]
+                  WantedBy=multi-user.target
+              - name: devkvm777.timer
+                enabled: true
+                contents: |
+                  [Unit]
+                  Description=Timer for how often to run dev-kvm chmod 777
+
+                  [Timer]
+                  OnUnitActiveSec=10s
+                  OnBootSec=10s
+
+                  [Install]
+                  WantedBy=timers.target
+              - name: networkd.service
+                enabled: true
+                dropins:
+                  - name: bridges.conf
+                    contents: |
+                      [Match]
+                      Name=eth1 br-int br-tun br-ex ovs-system
+                      [Link]
+                      Unmanaged=yes
+                  - name: tunnels.conf
+                    contents: |
+                      [Match]
+                      Kind=tun tap
+                      [Link]
+                      Unmanaged=yes
+            
     clusterConfiguration: {}
     initConfiguration:
       nodeRegistration:
