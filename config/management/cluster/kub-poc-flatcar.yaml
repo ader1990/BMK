@@ -14,7 +14,7 @@ spec:
               - name: 03-bridges.network
                 contents: |
                   [Match]
-                  Name=eth* br-int br-tun br-ex ovs-system
+                  Name=eth1 br-int br-tun br-ex ovs-system
                   [Link]
                   Unmanaged=yes
               - name: 04-tunnels.network
