@@ -9,6 +9,20 @@ spec:
     ignition:
       containerLinuxConfig:
         additionalConfig: |
+          networkd:
+            units:
+              - name: 03-bridges.network
+                contents: |
+                  [Match]
+                  Name=eth* br-int br-tun br-ex ovs-system
+                  [Link]
+                  Unmanaged=yes
+              - name: 04-tunnels.network
+                contents: |
+                  [Match]
+                  Kind=tun tap
+                  [Link]
+                  Unmanaged=yes
           storage:
             links:
               - path: /etc/extensions/kubernetes.raw
@@ -84,21 +98,6 @@ spec:
 
                   [Install]
                   WantedBy=timers.target
-              - name: networkd.service
-                enabled: true
-                dropins:
-                  - name: bridges.conf
-                    contents: |
-                      [Match]
-                      Name=eth1 br-int br-tun br-ex ovs-system
-                      [Link]
-                      Unmanaged=yes
-                  - name: tunnels.conf
-                    contents: |
-                      [Match]
-                      Kind=tun tap
-                      [Link]
-                      Unmanaged=yes
             
     clusterConfiguration: {}
     initConfiguration:
