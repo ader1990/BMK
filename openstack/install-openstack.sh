@@ -131,11 +131,6 @@ helm upgrade --install glance openstack-helm/glance \
     --namespace=openstack \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c glance glance_pvc_storage ${FEATURES}) &
 
-helm upgrade --install cinder openstack-helm/cinder \
-    --namespace=openstack \
-    --timeout=600s \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c cinder ${FEATURES}) &
-
 helm upgrade --install horizon openstack-helm/horizon \
     --namespace=openstack \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c horizon ${FEATURES}) &
@@ -158,7 +153,14 @@ pushd openstack-helm/nova/
 helm dependency build
 cd ../neutron/
 helm dependency build
+cd ../cinder/
+helm dependency build
 popd
+
+helm upgrade --install cinder openstack-helm/cinder \
+    --namespace=openstack \
+    --timeout=600s \
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c cinder ${FEATURES}) &
 
 helm upgrade --install nova openstack-helm/nova \
     --namespace=openstack \

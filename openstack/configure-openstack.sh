@@ -46,6 +46,6 @@ openstack --os-cloud openstack_helm server create --image 'ubuntu-noble' --flavo
 openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.192 --subnet public public
 openstack --os-cloud openstack_helm server add floating ip ubuntu-sylva 192.168.56.192
 
-chmod 600 sylva.pem
-ssh -i sylva.pem ubuntu@192.168.56.192
+# chmod 600 sylva.pem
+# ssh -i sylva.pem ubuntu@192.168.56.192
 
