@@ -234,7 +234,9 @@ until argocd app sync ceph-classes; do sleep 5; done
 
 until argocd app sync rook-ceph-cluster; do sleep 5; done
 
-until kubectl  --kubeconfig ~/kub-poc.kubeconfig -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph status; do sleep 1; done
+sleep 30
+
+until kubectl  --kubeconfig ~/kub-poc.kubeconfig -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph status; do sleep 10; done
 
 # verify ceph pvc
 argocd app sync wordpress --force --prune
@@ -252,6 +254,14 @@ until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kubevirt virt
 
 until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
 
+until kubectl --kubeconfig ~/kub-poc.kubeconfig get node vm02; do sleep 1; done
+until kubectl --kubeconfig ~/kub-poc.kubeconfig get node vm03; do sleep 1; done
+
+kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm02 -p '{"spec":{"taints":[]}}' || true
+kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm03 -p '{"spec":{"taints":[]}}' || true
+
+until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm02 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm03 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
 until argocd app sync testvm --force --prune; do sleep 1; done;
 
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait virtualmachineinstance/fedora-public-ip --for condition=Ready --timeout=90s; do sleep 1; done
@@ -263,3 +273,4 @@ until kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/fedora-public-ip -o yaml
 until nc -w5 -z -v $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/fedora-public-ip -o yaml | yq .status.loadBalancer.ingress[0].ip) 22; do sleep 1; done;
 
 until curl --connect-timeout 5 --fail-with-body $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/nginx -n nginx -o yaml | yq .status.loadBalancer.ingress[0].ip); do sleep 1; done
+
