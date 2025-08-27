@@ -33,19 +33,27 @@ openstack --os-cloud openstack_helm security group rule create default --protoco
 openstack --os-cloud openstack_helm security group rule create default --protocol tcp --egress
 openstack --os-cloud openstack_helm security group rule create default --protocol icmp --egress
 
-openstack --os-cloud openstack_helm server create --image 'Cirros 0.6.2 64-bit' --flavor m1.tiny --network private cirros-$rand_suffix
-sleep 10
-until openstack --os-cloud openstack_helm console log show cirros-$rand_suffix | grep -i gocubsgo; do sleep 1 && echo 'Trying again'; done
+openstack --os-cloud openstack_helm server create --image 'Cirros 0.6.2 64-bit' --flavor m1.tiny --network private --boot-from-volume 1 cirros-$rand_suffix
 
 wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
 openstack --os-cloud openstack_helm image create ubuntu-noble --disk-format qcow2 --container-format bare --file noble-server-cloudimg-amd64.img
-
-KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c 'chmod 777 /dev/kvm'
 openstack --os-cloud openstack_helm server create --image 'ubuntu-noble' --flavor m1.sylva --network private ubuntu-sylva --key sylva
+
+wget https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img
+openstack --os-cloud openstack_helm image create flatcar-stable --disk-format qcow2 --container-format bare --file flatcar_production_openstack_image.img
+openstack --os-cloud openstack_helm server create --image 'flatcar-stable' --flavor m1.sylva --network private flatcar-stable --key sylva
 
 openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.192 --subnet public public
 openstack --os-cloud openstack_helm server add floating ip ubuntu-sylva 192.168.56.192
 
+openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.193 --subnet public public
+openstack --os-cloud openstack_helm server add floating ip flatcar-stable 192.168.56.193
+
+
+until openstack --os-cloud openstack_helm console log show cirros-$rand_suffix | grep -i gocubsgo; do sleep 1 && echo 'Trying again'; done
+
+until nc -w5 -z -v 192.168.56.192 22; do sleep 1; done;
+until nc -w5 -z -v 192.168.56.193 22; do sleep 1; done;
 # chmod 600 sylva.pem
 # ssh -i sylva.pem ubuntu@192.168.56.192
 
