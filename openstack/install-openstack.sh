@@ -188,7 +188,7 @@ EOF
 
 helm upgrade --install neutron openstack-helm/neutron \
     --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c neutron neutron_simple ${FEATURES}) &
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c neutron neutron_simple ${FEATURES})
 
 rm -rf openstack-helm
 rm -rf "${OVERRIDES_DIR}"
