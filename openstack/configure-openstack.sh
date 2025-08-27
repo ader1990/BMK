@@ -22,7 +22,7 @@ openstack --os-cloud openstack_helm router create router
 openstack --os-cloud openstack_helm router add subnet router private
 
 openstack --os-cloud openstack_helm net create public --external --provider-network-type flat --provider-physical-network public
-openstack --os-cloud openstack_helm subnet create public --network public --subnet-range 192.168.56.0/24 --no-dhcp --allocation-pool start=192.168.56.189,end=192.168.56.195
+openstack --os-cloud openstack_helm subnet create public --network public --subnet-range 192.168.56.0/24 --no-dhcp --allocation-pool start=192.168.56.189,end=192.168.56.200
 
 openstack --os-cloud openstack_helm router set --external-gateway public router
 
@@ -50,14 +50,14 @@ openstack --os-cloud openstack_helm server create --image 'flatcar-alpha' --flav
 openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.192 --subnet public public
 openstack --os-cloud openstack_helm server add floating ip ubuntu-sylva 192.168.56.192
 
-openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.193 --subnet public public
-openstack --os-cloud openstack_helm server add floating ip flatcar-alpha 192.168.56.193
+openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.195 --subnet public public
+openstack --os-cloud openstack_helm server add floating ip flatcar-alpha 192.168.56.195
 
 
 until openstack --os-cloud openstack_helm console log show cirros-$rand_suffix | grep -i gocubsgo; do sleep 1 && echo 'Trying again'; done
 
 until nc -w5 -z -v 192.168.56.192 22; do sleep 1; done;
-until nc -w5 -z -v 192.168.56.193 22; do sleep 1; done;
+until nc -w5 -z -v 192.168.56.195 22; do sleep 1; done;
 # chmod 600 sylva.pem
 # ssh -i sylva.pem ubuntu@192.168.56.192
 
