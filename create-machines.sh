@@ -70,8 +70,8 @@ main() {
     create_machine machine3
     create_bmc_machine machine3 625
 
-    create_machine machine4
-    create_bmc_machine machine4 626
+    # create_machine machine4
+    # create_bmc_machine machine4 626
 }
 
 set -euxo pipefail
