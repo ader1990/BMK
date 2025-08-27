@@ -262,15 +262,15 @@ kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm03 -p '{"spec":{"taints":
 
 until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm02 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
 until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm03 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+
 until argocd app sync testvm --force --prune; do sleep 1; done;
 
-until kubectl --kubeconfig ~/kub-poc.kubeconfig wait virtualmachineinstance/fedora-public-ip --for condition=Ready --timeout=90s; do sleep 1; done
-
-until (curl --connect-timeout 5 --fail-with-body $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/wordpress -n wordpress -o yaml | yq .status.loadBalancer.ingress[0].ip)); do sleep 1; done;
-
-until kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/fedora-public-ip -o yaml | yq .status.loadBalancer.ingress[0].ip;  do sleep 1; done
-
-until nc -w5 -z -v $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/fedora-public-ip -o yaml | yq .status.loadBalancer.ingress[0].ip) 22; do sleep 1; done;
+# until kubectl --kubeconfig ~/kub-poc.kubeconfig wait virtualmachineinstance/fedora-public-ip --for condition=Ready --timeout=90s; do sleep 1; done
 
 until curl --connect-timeout 5 --fail-with-body $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/nginx -n nginx -o yaml | yq .status.loadBalancer.ingress[0].ip); do sleep 1; done
+until (curl --connect-timeout 5 --fail-with-body $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/wordpress -n wordpress -o yaml | yq .status.loadBalancer.ingress[0].ip)); do sleep 1; done;
+
+# until kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/fedora-public-ip -o yaml | yq .status.loadBalancer.ingress[0].ip;  do sleep 1; done
+# until nc -w5 -z -v $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/fedora-public-ip -o yaml | yq .status.loadBalancer.ingress[0].ip) 22; do sleep 1; done;
+
 
