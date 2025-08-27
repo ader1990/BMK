@@ -39,15 +39,15 @@ wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.i
 openstack --os-cloud openstack_helm image create ubuntu-noble --disk-format qcow2 --container-format bare --file noble-server-cloudimg-amd64.img
 openstack --os-cloud openstack_helm server create --image 'ubuntu-noble' --flavor m1.sylva --network private ubuntu-sylva --key sylva
 
-wget https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img
-openstack --os-cloud openstack_helm image create flatcar-stable --disk-format qcow2 --container-format bare --file flatcar_production_openstack_image.img
-openstack --os-cloud openstack_helm server create --image 'flatcar-stable' --flavor m1.sylva --network private flatcar-stable --key sylva
+wget https://alpha.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img
+openstack --os-cloud openstack_helm image create flatcar-alpha --disk-format qcow2 --container-format bare --file flatcar_production_openstack_image.img
+openstack --os-cloud openstack_helm server create --image 'flatcar-alpha' --flavor m1.sylva --network private flatcar-alpha --key sylva
 
 openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.192 --subnet public public
 openstack --os-cloud openstack_helm server add floating ip ubuntu-sylva 192.168.56.192
 
 openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.193 --subnet public public
-openstack --os-cloud openstack_helm server add floating ip flatcar-stable 192.168.56.193
+openstack --os-cloud openstack_helm server add floating ip flatcar-alpha 192.168.56.193
 
 
 until openstack --os-cloud openstack_helm console log show cirros-$rand_suffix | grep -i gocubsgo; do sleep 1 && echo 'Trying again'; done
