@@ -88,20 +88,14 @@ helm upgrade --install rabbitmq openstack-helm/rabbitmq \
     --timeout=600s \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c rabbitmq ${FEATURES})
 
-helm osh wait-for-pods openstack
-
 helm upgrade --install mariadb openstack-helm/mariadb \
     --namespace=openstack \
     --set pod.replicas.server=1 \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c mariadb ${FEATURES})
 
-helm osh wait-for-pods openstack
-
 helm upgrade --install memcached openstack-helm/memcached \
     --namespace=openstack \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c memcached ${FEATURES})
-
-helm osh wait-for-pods openstack
 
 helm upgrade --install keystone openstack-helm/keystone \
     --namespace=openstack \
@@ -112,8 +106,6 @@ helm osh wait-for-pods openstack
 helm upgrade --install heat openstack-helm/heat \
     --namespace=openstack \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c heat ${FEATURES})
-
-helm osh wait-for-pods openstack
 
 tee ${OVERRIDES_DIR}/glance/glance_pvc_storage.yaml <<EOF
 storage: pvc
@@ -141,20 +133,20 @@ helm upgrade --install glance openstack-helm/glance \
     --namespace=openstack \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c glance glance_pvc_storage ${FEATURES})
 
-helm osh wait-for-pods openstack
-
 helm upgrade --install cinder openstack-helm/cinder \
     --namespace=openstack \
     --timeout=600s \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c cinder ${FEATURES})
+
+helm upgrade --install horizon openstack-helm/horizon \
+    --namespace=openstack \
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c horizon ${FEATURES})
 
 helm osh wait-for-pods openstack
 
 helm upgrade --install openvswitch openstack-helm/openvswitch \
     --namespace=openstack \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c openvswitch ${FEATURES})
-
-helm osh wait-for-pods openstack
 
 helm upgrade --install libvirt openstack-helm/libvirt \
     --namespace=openstack \
@@ -202,57 +194,6 @@ helm upgrade --install neutron openstack-helm/neutron \
     --namespace=openstack \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c neutron neutron_simple ${FEATURES})
 
-helm osh wait-for-pods openstack
-
 rm -rf openstack-helm/
 
-helm upgrade --install horizon openstack-helm/horizon \
-    --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c horizon ${FEATURES})
-
 helm osh wait-for-pods openstack
-
-KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c 'chmod 777 /dev/kvm'
-KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm02 -- sh -c 'chmod 777 /dev/kvm'
-KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm03 -- sh -c 'chmod 777 /dev/kvm'
-
-rand_suffix=$(dd of=/tmp/rand if=/dev/random bs=1M count=1 && md5sum /tmp/rand | awk '{print $1}')
-
-openstack --os-cloud openstack_helm quota set --ram 262144
-openstack --os-cloud openstack_helm quota set --cores 200
-openstack --os-cloud openstack_helm flavor create --ram 32768 --disk 40 --vcpus 16 m1.sylva
-openstack --os-cloud openstack_helm key create sylva > sylva.pem
-
-openstack --os-cloud openstack_helm net show private || openstack --os-cloud openstack_helm net create private
-openstack --os-cloud openstack_helm subnet show private || openstack --os-cloud openstack_helm subnet create private --network private --subnet-range 10.5.0.0/24 --dns-nameserver 8.8.8.8
-openstack --os-cloud openstack_helm router create router
-openstack --os-cloud openstack_helm router add subnet router private
-
-openstack --os-cloud openstack_helm net create public --external --provider-network-type flat --provider-physical-network public
-openstack --os-cloud openstack_helm subnet create public --network public --subnet-range 192.168.56.0/24 --no-dhcp --allocation-pool start=192.168.56.189,end=192.168.56.195
-
-openstack --os-cloud openstack_helm router set --external-gateway public router
-
-openstack --os-cloud openstack_helm security group rule create default --protocol udp
-openstack --os-cloud openstack_helm security group rule create default --protocol tcp
-openstack --os-cloud openstack_helm security group rule create default --protocol icmp
-openstack --os-cloud openstack_helm security group rule create default --protocol udp --egress
-openstack --os-cloud openstack_helm security group rule create default --protocol tcp --egress
-openstack --os-cloud openstack_helm security group rule create default --protocol icmp --egress
-
-openstack --os-cloud openstack_helm server create --image 'Cirros 0.6.2 64-bit' --flavor m1.tiny --network private cirros-$rand_suffix
-sleep 10
-until openstack --os-cloud openstack_helm console log show cirros-$rand_suffix | grep -i gocubsgo; do sleep 1 && echo 'Trying again'; done
-
-wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
-openstack --os-cloud openstack_helm image create ubuntu-noble --disk-format qcow2 --container-format bare --file noble-server-cloudimg-amd64.img
-
-KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c 'chmod 777 /dev/kvm'
-openstack --os-cloud openstack_helm server create --image 'ubuntu-noble' --flavor m1.sylva --network private ubuntu-sylva --key sylva
-
-openstack --os-cloud openstack_helm floating ip create --floating-ip-address 192.168.56.192 --subnet public public
-openstack --os-cloud openstack_helm server add floating ip ubuntu-sylva 192.168.56.192
-
-chmod 600 sylva.pem
-ssh -i sylva.pem ubuntu@192.168.56.192
-
