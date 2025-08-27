@@ -86,26 +86,24 @@ helm upgrade --install rabbitmq openstack-helm/rabbitmq \
     --namespace=openstack \
     --set pod.replicas.server=1 \
     --timeout=600s \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c rabbitmq ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c rabbitmq ${FEATURES}) &
 
 helm upgrade --install mariadb openstack-helm/mariadb \
     --namespace=openstack \
     --set pod.replicas.server=1 \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c mariadb ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c mariadb ${FEATURES}) &
 
 helm upgrade --install memcached openstack-helm/memcached \
     --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c memcached ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c memcached ${FEATURES}) &
 
 helm upgrade --install keystone openstack-helm/keystone \
     --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c keystone ${FEATURES})
-
-helm osh wait-for-pods openstack
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c keystone ${FEATURES}) &
 
 helm upgrade --install heat openstack-helm/heat \
     --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c heat ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c heat ${FEATURES}) &
 
 tee ${OVERRIDES_DIR}/glance/glance_pvc_storage.yaml <<EOF
 storage: pvc
@@ -131,31 +129,29 @@ EOF
 
 helm upgrade --install glance openstack-helm/glance \
     --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c glance glance_pvc_storage ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c glance glance_pvc_storage ${FEATURES}) &
 
 helm upgrade --install cinder openstack-helm/cinder \
     --namespace=openstack \
     --timeout=600s \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c cinder ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c cinder ${FEATURES}) &
 
 helm upgrade --install horizon openstack-helm/horizon \
     --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c horizon ${FEATURES})
-
-helm osh wait-for-pods openstack
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c horizon ${FEATURES}) &
 
 helm upgrade --install openvswitch openstack-helm/openvswitch \
     --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c openvswitch ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c openvswitch ${FEATURES}) &
 
 helm upgrade --install libvirt openstack-helm/libvirt \
     --namespace=openstack \
     --set conf.ceph.enabled=true \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c libvirt ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c libvirt ${FEATURES}) &
 
 helm upgrade --install placement openstack-helm/placement \
     --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c placement ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c placement ${FEATURES}) &
 
 git clone https://github.com/ader1990/openstack-helm -b flatcar_june_2025
 pushd openstack-helm/nova/
@@ -168,7 +164,7 @@ helm upgrade --install nova openstack-helm/nova \
     --namespace=openstack \
     --set bootstrap.wait_for_computes.enabled=true \
     --set conf.ceph.enabled=true \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c nova ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c nova ${FEATURES}) &
 
 PROVIDER_INTERFACE=eth1
 tee ${OVERRIDES_DIR}/neutron/neutron_simple.yaml << EOF
@@ -192,8 +188,9 @@ EOF
 
 helm upgrade --install neutron openstack-helm/neutron \
     --namespace=openstack \
-    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c neutron neutron_simple ${FEATURES})
+    $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c neutron neutron_simple ${FEATURES}) &
 
-rm -rf openstack-helm/
+rm -rf openstack-helm
+rm -rf "${OVERRIDES_DIR}"
 
 helm osh wait-for-pods openstack
