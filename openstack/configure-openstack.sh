@@ -35,11 +35,15 @@ openstack --os-cloud openstack_helm security group rule create default --protoco
 
 openstack --os-cloud openstack_helm server create --image 'Cirros 0.6.2 64-bit' --flavor m1.tiny --network private --boot-from-volume 1 cirros-$rand_suffix
 
-wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+[ -f noble-server-cloudimg-amd64.img ] || \
+  wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+
 openstack --os-cloud openstack_helm image create ubuntu-noble --disk-format qcow2 --container-format bare --file noble-server-cloudimg-amd64.img
 openstack --os-cloud openstack_helm server create --image 'ubuntu-noble' --flavor m1.sylva --network private ubuntu-sylva --key sylva
 
-wget https://alpha.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img
+[ -f flatcar_production_openstack_image.img ] || \
+  wget https://alpha.release.flatcar-linux.net/amd64-usr/current/flatcar_production_openstack_image.img
+
 openstack --os-cloud openstack_helm image create flatcar-alpha --disk-format qcow2 --container-format bare --file flatcar_production_openstack_image.img
 openstack --os-cloud openstack_helm server create --image 'flatcar-alpha' --flavor m1.sylva --network private flatcar-alpha --key sylva
 
