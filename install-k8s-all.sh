@@ -5,12 +5,14 @@ set -xe
 sudo ls
 
 CURRENT_BRANCH=$(git branch --show-current)
-OLD_CURRENT_BRANCH="old-branch"
+OLD_CURRENT_BRANCH="argocd-arm64-altra-mariner-amd64hybrid-nativemetallb-bitnamisecrets1"
 
-export IP_SUBNET_PREFIX="192.168.56"
-export IP_BMC_SUBNET_PREFIX="192.168.56"
+DEPLOYMENT_TYPE="baremetal"
 
-export MANAGEMENT_VIP_NIC="enp5s0"
+export IP_SUBNET_PREFIX="10.8.10"
+export IP_BMC_SUBNET_PREFIX="10.8.0"
+
+export MANAGEMENT_VIP_NIC="enp1s0f0np0"
 export MANAGEMENT_HOST_IP="${IP_SUBNET_PREFIX}.2"
 export MANAGEMENT_HOST_IP_CIDR="${MANAGEMENT_HOST_IP}/32"
 
@@ -28,29 +30,6 @@ export WORKLOAD_K8S_SERVER_IP_1="${IP_SUBNET_PREFIX}.42"
 export WORKLOAD_K8S_SERVER_BMC_IP_1="${IP_BMC_SUBNET_PREFIX}.243"
 
 # https://github.com/mikefarah/yq/releases/download/v4.33.3/yq_linux_arm64
-yq -i \
-  '.controller.service.loadBalancerIP = strenv(MANAGEMENT_ARGOCD_IP)' \
-  config/management/ingress-nginx/values.yaml
-
-yq -i \
-  '.env.vip_interface = strenv(MANAGEMENT_VIP_NIC)' \
-  config/management/ingress-nginx/kube-vip-values.yaml
-
-yq -i \
-  '.global.hostAliases[0].ip = strenv(MANAGEMENT_ARGOCD_IP)' \
-  config/management/argocd/values.yaml
-
-yq -i \
-  '.argocd.values.global.hostAliases[0].ip = strenv(MANAGEMENT_ARGOCD_IP)' \
-  applications/management/values.yaml
-yq -i \
-  '.ingress.values.controller.service.loadBalancerIP = strenv(MANAGEMENT_ARGOCD_IP)' \
-  applications/management/values.yaml
-
-yq -i \
-  '.tinkstack.values.stack.loadBalancerIP = strenv(MANAGEMENT_TINKERBELL_IP)' \
-  applications/management/values.yaml
-
 
 sed -i "s/${OLD_CURRENT_BRANCH}/${CURRENT_BRANCH}/g" applications/workload/templates/*
 sed -i "s/${OLD_CURRENT_BRANCH}/${CURRENT_BRANCH}/g" applications/management/templates/*
@@ -63,17 +42,6 @@ then
   exit 1
 fi
 
-
-read -r -p "Are you sure that the management k3d cluster does not exist and the workload cluster vm is clean? [y/N] " response
-response=${response,,}    # tolower
-if [[ "$response" =~ ^(yes|y)$ ]]
-then
-  echo "Full speed ahead!!!"
-  sleep 1
-else
-  echo "Please make sure the environment is clean"
-  exit 1
-fi
 # Start the deployment
 k3d cluster list k3s-default || k3d cluster create --network host --no-lb --k3s-arg "--disable=traefik,servicelb" \
   --k3s-arg "--kube-apiserver-arg=feature-gates=MixedProtocolLBService=true" \
@@ -103,48 +71,57 @@ kubectl delete pod -n kube-system -l app.kubernetes.io/name=sealed-secrets
 helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
   --version 4.5.2 --namespace ingress-nginx \
   --create-namespace \
-  -f config/management/ingress-nginx/values.yaml -v 6
+  -f helm/config/management/ingress-nginx/values.yaml \
+  --set-json "controller.service.loadBalancerIP=\"${MANAGEMENT_ARGOCD_IP}\""
+
 until kubectl wait deployment -n ingress-nginx ingress-nginx-controller --for condition=Available=True --timeout=90s; do sleep 1; done
 
-helm upgrade --install kube-vip kube-vip/kube-vip --version 0.5.0 \
+helm upgrade --install kube-vip kube-vip/kube-vip --version v0.8.0 \
   --namespace kube-vip --create-namespace \
-  -f config/management/ingress-nginx/kube-vip-values.yaml -v 6
+  -f helm/config/management/ingress-nginx/kube-vip-values.yaml \
+  --set-json ".env.vip_interface=\"${MANAGEMENT_VIP_NIC}\""
 
 helm upgrade --install argo-cd \
   --create-namespace --namespace argo-cd \
-  -f config/management/argocd/values.yaml argo-cd/argo-cd
+  -f helm/config/management/argocd/values.yaml argo-cd/argo-cd \
+  --set-json "global.hostAliases=[{\"ip\":\"${MANAGEMENT_ARGOCD_IP}\",\"hostnames\":[\"argo-cd.mgmt.kub-poc.local\"]}]"
+
 until kubectl wait deployment -n argo-cd argo-cd-argocd-server --for condition=Available=True --timeout=90s; do sleep 1; done
 until kubectl wait deployment -n argo-cd argo-cd-argocd-applicationset-controller --for condition=Available=True --timeout=90s; do sleep 1; done
 until kubectl wait deployment -n argo-cd argo-cd-argocd-repo-server --for condition=Available=True --timeout=90s; do sleep 1; done
 
-echo "${MANAGEMENT_ARGOCD_IP} argo-cd-virtual.mgmt.kub-poc.local" | sudo tee -a /etc/hosts
+echo "${MANAGEMENT_ARGOCD_IP} argo-cd.mgmt.kub-poc.local" | sudo tee -a /etc/hosts
 
 pass=$(kubectl -n argo-cd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
-until argocd repo list || argocd login argo-cd-virtual.mgmt.kub-poc.local --username admin --password $pass --insecure; do sleep 1; done
+argocd repo list || argocd login argo-cd.mgmt.kub-poc.local --username admin --password $pass --insecure
 
 until argocd repo list; do sleep 1; done
 
-until argocd repo add git@github.com:ader1990/bmk.git \
-    --ssh-private-key-path ~/.ssh/for-u5; do sleep 1; done
+argocd repo add git@github.com:ader1990/BMK.git \
+    --ssh-private-key-path ~/.ssh/id_rsa
 
-until argocd app sync management-apps || argocd app create management-apps \
-    --repo git@github.com:ader1990/bmk.git \
+argocd app sync management-apps || argocd app create management-apps \
+    --repo git@github.com:ader1990/BMK.git \
     --path applications/management --dest-namespace argo-cd \
     --dest-server https://kubernetes.default.svc \
-    --revision "${CURRENT_BRANCH}" --sync-policy automated; do sleep 1; done
+    --revision "${CURRENT_BRANCH}" --sync-policy automated
 
 argocd app sync management-apps
 argocd app get management-apps --hard-refresh
 
-# until argocd app sync prometheus; do sleep 5; done
+# until argocd app sync monitoring; do sleep 5; done
 
+argocd app set tink-stack -p stack.loadBalancerIP="${MANAGEMENT_TINKERBELL_IP}"
+argocd app set tink-stack -p smee.publicIP="${MANAGEMENT_TINKERBELL_IP}"
 argocd app sync tink-stack
+
 until kubectl wait deployment -n tink-system tink-stack --for condition=Available=True --timeout=90s; do sleep 1; done
 
 until kubectl get hardware -A; do sleep 1; done
 
 export TINKERBELL_IP="${MANAGEMENT_TINKERBELL_IP}"
 
+rm -rf  ~/.cluster-api
 mkdir -p ~/.cluster-api
 cat > ~/.cluster-api/clusterctl.yaml <<EOF
 providers:
@@ -154,52 +131,44 @@ providers:
 EOF
 
 export EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION="true"
+# GOPROXY=off 
 clusterctl init --infrastructure tinkerbell -v 5
-
-until kubectl wait deployment -n capi-system capi-controller-manager --for condition=Available=True --timeout=90s; do sleep 1; done
-until kubectl wait deployment -n capi-kubeadm-bootstrap-system capi-kubeadm-bootstrap-controller-manager --for condition=Available=True --timeout=90s; do sleep 1; done
-until kubectl wait deployment -n capi-kubeadm-control-plane-system capi-kubeadm-control-plane-controller-manager --for condition=Available=True --timeout=90s; do sleep 1; done
+# --core cluster-api:v1.7.2
+#3 --bootstrap cluster-api:v1.7.2
 until kubectl wait deployment -n capt-system capt-controller-manager --for condition=Available=True --timeout=90s; do sleep 1; done
 
-# finished the appliance part
-# exit
+until argocd app sync hardware-${DEPLOYMENT_TYPE};  do sleep 1; done
+until argocd app sync workload-cluster-${DEPLOYMENT_TYPE};  do sleep 1; done
+argocd app sync machine-${DEPLOYMENT_TYPE}
 
-argocd app sync hardware
-
-until argocd app sync workload-cluster;  do sleep 1; done
-argocd app sync machine
-
-# sleep 30
-# ipmitool -I lanplus -U admin -P admin -H 192.168.56.1 -p 623 chassis bootdev disk options=persistent
+sleep 30
 
 clusterctl get kubeconfig kub-poc -n tink-system > ~/kub-poc.kubeconfig || sleep 100 || clusterctl get kubeconfig kub-poc -n tink-system > ~/kub-poc.kubeconfig
-until kubectl --kubeconfig ~/kub-poc.kubeconfig get node -A; do sleep 1; done
+until kubectl --kubeconfig ~/kub-poc.kubeconfig get node -A; do sleep 1 && clusterctl get kubeconfig kub-poc -n tink-system > ~/kub-poc.kubeconfig; done
+#until kubectl --kubeconfig ~/kub-poc.kubeconfig get node vm01-proxmox; do sleep 1; done
 
-until kubectl --kubeconfig ~/kub-poc.kubeconfig get node vm01; do sleep 1; done
-
-until argocd cluster add kub-poc-admin@kub-poc \
+argocd cluster add kub-poc-admin@kub-poc \
    --kubeconfig ~/kub-poc.kubeconfig \
-   --server argo-cd-virtual.mgmt.kub-poc.local \
-   --insecure --yes; do sleep 1; done
+   --server argo-cd.mgmt.kub-poc.local \
+   --insecure --yes
 
 argocd app create workload-cluster-apps \
-    --repo git@github.com:ader1990/bmk.git \
+    --repo git@github.com:ader1990/BMK.git \
     --path applications/workload --dest-namespace argo-cd \
     --dest-server https://kubernetes.default.svc \
     --revision "${CURRENT_BRANCH}" --sync-policy automated
 
-kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm01 -p '{"spec":{"taints":[]}}' || true
+kubectl --kubeconfig ~/kub-poc.kubeconfig get node -o name | sed -e 's/.*\///g' | xargs -I {} kubectl --kubeconfig ~/kub-poc.kubeconfig patch node {} -p '{"spec":{"taints":[]}}' || true
 
 argocd app get workload-cluster-apps --hard-refresh
-
-
 argocd app sync cilium-manifests || true
 argocd app sync cilium-kub-poc || true
 
-until argocd app sync cilium-kub-poc || argocd app sync cilium-manifests; do sleep 1; done;
-until argocd app sync cilium-kub-poc && argocd app sync cilium-manifests; do sleep 1; done;
+sleep 5
 
-until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kube-system cilium-operator --for condition=Available=True --timeout=90s; do sleep 1; done
+until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kube-system cilium-operator --for condition=Available=True --timeout=90s; do argocd app sync cilium-kub-poc || sleep 1; done
+sleep 5
+
 argocd app sync cilium-manifests --force || argocd app sync cilium-kub-poc
 
 until kubectl get CiliumLoadBalancerIPPool --kubeconfig ~/kub-poc.kubeconfig || (argocd app sync cilium-manifests && argocd app sync cilium-kub-poc); do sleep 1; done
@@ -207,70 +176,49 @@ until (argocd app sync cilium-manifests || argocd app sync cilium-kub-poc) && ku
 
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kube-system cilium-operator --for condition=Available=True --timeout=90s; do sleep 1; done
 
-# until kubectl --kubeconfig ~/kub-poc.kubeconfig -n kube-system get lease/cilium-l2announce-kube-system-kube-dns; do sleep 1; done
-until kubectl --kubeconfig ~/kub-poc.kubeconfig wait pod -n kube-system -l 'k8s-app=cilium'  --for condition=Ready --timeout=90s; do sleep 1; done
-
-sleep 30
 # verify cilium load balancer
 argocd app sync nginx --force --prune
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait pod -n nginx nginx --for condition=Ready --timeout=90s; do sleep 1; done
-
-#exit
 # does not work on ARM64 because MSSQL images for ARM64 do not exist
-#argocd app sync mssql
+# argocd app sync mssql
 # until kubectl --kubeconfig ~/kub-poc.kubeconfig exec -ti deployment/kub-poc-mssql2022v3 -- /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "P@ssw0rd1" -Q "SELECT name, database_id, create_date  FROM sys.databases"; do sleep 1; done
 
-argocd app sync rook-ceph-operator
+until argocd app sync rook-ceph-operator; do sleep 5; done
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n rook-ceph rook-ceph-operator --for condition=Available=True --timeout=90s; do sleep 1; done
 
-# cleanup nodes from previous ceph
-
-#KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell sut01-altra -- sh -c 'export DISK=$(fdisk -l | grep "Disk model: INTEL SSD" -B 1 | head -n 1 | awk '\''{print $2}'\'' | sed "s/:$//") && echo "w" | fdisk $DISK && sgdisk --zap-all $DISK && blkdiscard $DISK || sudo dd if=/dev/zero of="$DISK" bs=1M count=100 oflag=direct,dsync && partprobe $DISK && rm -rf /var/lib/rook'
-#KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell sut02-altra -- sh -c 'export DISK=$(fdisk -l | grep "Disk model: INTEL SSD" -B 1 | head -n 1 | awk '\''{print $2}'\'' | sed "s/:$//") && echo "w" | fdisk $DISK && sgdisk --zap-all $DISK && blkdiscard $DISK || sudo dd if=/dev/zero of="$DISK" bs=1M count=100 oflag=direct,dsync && partprobe $DISK && rm -rf /var/lib/rook'
-# KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell sut31-emag -- sh -c 'echo w | fdisk /dev/sdb && rm -rf /var/lib/rook'
-# KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell sut32-emag -- sh -c 'echo w | fdisk /dev/sdb && rm -rf /var/lib/rook'
-
 until argocd app sync ceph-classes; do sleep 5; done
+
+NODES=$(kubectl --kubeconfig ~/kub-poc.kubeconfig get node -o name | sed -e 's/.*\///g')
+
+for NODE in "${NODES[@]}"; do
+  # cleanup nodes from previous ceph
+  until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell $NODE -- sh -c 'export DISK=$(fdisk -l | grep "Disk model: INTEL SSD" -B 1 | head -n 1 | awk '\''{print $2}'\'' | sed "s/:$//") && echo "w" | fdisk $DISK && sgdisk --zap-all $DISK && blkdiscard $DISK || sudo dd if=/dev/zero of="$DISK" bs=1M count=100 oflag=direct,dsync && partprobe $DISK && rm -rf /var/lib/rook'; do sleep 1; done;
+done
 
 until argocd app sync rook-ceph-cluster; do sleep 5; done
 
 sleep 30
-
-until kubectl  --kubeconfig ~/kub-poc.kubeconfig -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph status; do sleep 10; done
+#until kubectl --kubeconfig ~/kub-poc.kubeconfig delete -n rook-ceph pod -l app=rook-ceph-mon; do sleep 1; done
+until kubectl  --kubeconfig ~/kub-poc.kubeconfig -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph status; do sleep 1; done
 
 # verify ceph pvc
 argocd app sync wordpress --force --prune
 
-argocd app sync cilium-manifests || true
-argocd app sync cilium-kub-poc || true
-
 # verify kubevirt
-argocd app sync cdi-manifests
-argocd app sync kubevirt-vncproxy || true
-until argocd app sync kubevirt && argocd app sync kubevirt-vncproxy; do sleep 1; done;
+# argocd app sync cdi-manifests
+until argocd app sync kubevirt; do sleep 1; done;
 
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kubevirt virt-api --for condition=Available=True --timeout=90s; do sleep 1; done
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kubevirt virt-operator --for condition=Available=True --timeout=90s; do sleep 1; done
 
-until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+argocd app sync kubevirt-vncproxy
 
-until kubectl --kubeconfig ~/kub-poc.kubeconfig get node vm02; do sleep 1; done
-until kubectl --kubeconfig ~/kub-poc.kubeconfig get node vm03; do sleep 1; done
+#until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell sut01-altra -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
 
-kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm02 -p '{"spec":{"taints":[]}}' || true
-kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm03 -p '{"spec":{"taints":[]}}' || true
+argocd app sync testvm --force --prune || argocd app sync testvm --force --prune
 
-until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm02 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
-until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm03 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+until kubectl --kubeconfig ~/kub-poc.kubeconfig wait vm/vm-example-arm64 --for condition=Ready --timeout=90s; do sleep 1; done
 
-until argocd app sync testvm --force --prune; do sleep 1; done;
-
-# until kubectl --kubeconfig ~/kub-poc.kubeconfig wait virtualmachineinstance/fedora-public-ip --for condition=Ready --timeout=90s; do sleep 1; done
-
-until curl --connect-timeout 5 --fail-with-body $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/nginx -n nginx -o yaml | yq .status.loadBalancer.ingress[0].ip); do sleep 1; done
-until (curl --connect-timeout 5 --fail-with-body $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/wordpress -n wordpress -o yaml | yq .status.loadBalancer.ingress[0].ip)); do sleep 1; done;
-
-# until kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/fedora-public-ip -o yaml | yq .status.loadBalancer.ingress[0].ip;  do sleep 1; done
-# until nc -w5 -z -v $(kubectl --kubeconfig ~/kub-poc.kubeconfig get svc/fedora-public-ip -o yaml | yq .status.loadBalancer.ingress[0].ip) 22; do sleep 1; done;
-
+# upload KubeVirt Windows image PVC
+# virtctl image-upload pvc win2k22-qcow2 --size=50Gi --image-path=../win2k22-core-kubevirt-14052024.qcow2.gz     --uploadproxy-url https://cdi-uploadproxy:31001 --insecure
 
