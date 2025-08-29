@@ -190,7 +190,7 @@ until argocd app sync ceph-classes; do sleep 5; done
 
 NODES=$(kubectl --kubeconfig ~/kub-poc.kubeconfig get node -o name | sed -e 's/.*\///g')
 
-for NODE in "${NODES[@]}"; do
+for NODE in $NODES; do
   # cleanup nodes from previous ceph
   until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell $NODE -- sh -c 'export DISK=$(fdisk -l | grep "Disk model: INTEL SSD" -B 1 | head -n 1 | awk '\''{print $2}'\'' | sed "s/:$//") && echo "w" | fdisk $DISK && sgdisk --zap-all $DISK && blkdiscard $DISK || sudo dd if=/dev/zero of="$DISK" bs=1M count=100 oflag=direct,dsync && partprobe $DISK && rm -rf /var/lib/rook'; do sleep 1; done;
 done
