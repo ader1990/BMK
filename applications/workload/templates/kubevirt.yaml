@@ -10,7 +10,7 @@ spec:
       - CreateNamespace=true
   destination:
     namespace: kube-system
-    server: https://192.168.56.151:6443
+    name: kub-poc-admin@kub-poc
   project: default
   source:
     path: config/workload/kubevirt
