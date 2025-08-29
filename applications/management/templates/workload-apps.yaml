@@ -17,4 +17,4 @@ spec:
   source:
     repoURL: 'git@github.com:ader1990/BMK.git'
     path: applications/workload
-    targetRevision: cncf_tm_baremetal_kvm_2025
+    targetRevision: baremetal_virtual
