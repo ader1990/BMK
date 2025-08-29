@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: machine
+  name: machine-baremetal
 spec:
   syncPolicy:
     syncOptions:
@@ -13,6 +13,24 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: config/management/machine
+    path: config/management/machine-baremetal
+    repoURL: git@github.com:ader1990/BMK.git
+    targetRevision: baremetal_virtual
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: machine-virtual
+spec:
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+  destination:
+    namespace: tink-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: config/management/machine-virtual
     repoURL: git@github.com:ader1990/BMK.git
     targetRevision: baremetal_virtual

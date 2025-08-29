@@ -2,14 +2,33 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: workload-cluster
+  name: workload-cluster-baremetal
 spec:
   destination:
     namespace: tink-system
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: config/management/cluster
+    path: config/management/cluster-baremetal
+    repoURL: git@github.com:ader1990/BMK.git
+    targetRevision: baremetal_virtual
+  ignoreDifferences:
+  - group: infrastructure.cluster.x-k8s.io
+    kind: TinkerbellCluster
+    jsonPointers:
+    - /spec/imageLookupBaseRegistry
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: workload-cluster-virtual
+spec:
+  destination:
+    namespace: tink-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: config/management/cluster-virtual
     repoURL: git@github.com:ader1990/BMK.git
     targetRevision: baremetal_virtual
   ignoreDifferences:
