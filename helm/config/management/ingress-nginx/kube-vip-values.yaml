@@ -1,11 +1,11 @@
 image:
   repository: ghcr.io/kube-vip/kube-vip
   pullPolicy: IfNotPresent
-  tag: v0.7.0
+  tag: v1.0.0
 config:
   address: ''
 env:
-  vip_interface: enp5s0
+  vip_interface: enp1s0f0np0
   vip_arp: 'true'
   lb_enable: 'true'
   lb_port: '6443'
