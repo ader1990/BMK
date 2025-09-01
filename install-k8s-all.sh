@@ -147,10 +147,10 @@ clusterctl get kubeconfig kub-poc -n tink-system > ~/kub-poc.kubeconfig || sleep
 until kubectl --kubeconfig ~/kub-poc.kubeconfig get node -A; do sleep 1 && clusterctl get kubeconfig kub-poc -n tink-system > ~/kub-poc.kubeconfig; done
 #until kubectl --kubeconfig ~/kub-poc.kubeconfig get node vm01-proxmox; do sleep 1; done
 
-argocd cluster add kub-poc-admin@kub-poc \
+until argocd cluster add kub-poc-admin@kub-poc \
    --kubeconfig ~/kub-poc.kubeconfig \
    --server argo-cd.mgmt.kub-poc.local \
-   --insecure --yes
+   --insecure --yes; do sleep 1; done
 
 argocd app create workload-cluster-apps \
     --repo git@github.com:ader1990/BMK.git \
