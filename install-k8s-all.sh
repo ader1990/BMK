@@ -195,12 +195,7 @@ until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kubevirt virt
 
 argocd app sync kubevirt-vncproxy
 
-#until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell sut01-altra -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
-
 argocd app sync testvm --force --prune || argocd app sync testvm --force --prune
 
-until kubectl --kubeconfig ~/kub-poc.kubeconfig wait vm/vm-example-arm64 --for condition=Ready --timeout=90s; do sleep 1; done
-
-# upload KubeVirt Windows image PVC
-# virtctl image-upload pvc win2k22-qcow2 --size=50Gi --image-path=../win2k22-core-kubevirt-14052024.qcow2.gz     --uploadproxy-url https://cdi-uploadproxy:31001 --insecure
+until kubectl --kubeconfig ~/kub-poc.kubeconfig wait vmi/fedora-public-ip --for condition=Ready --timeout=90s; do sleep 1; done
 
