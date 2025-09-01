@@ -11,6 +11,9 @@ DEPLOYMENT_TYPE="${1:-baremetal}"
 IP_SUBNET_PREFIX="${2:-10.8.10}"
 MANAGEMENT_VIP_NIC="${3:-enp1s0f0np0}"
 
+MANAGEMENT_ARGOCD_IP="${IP_SUBNET_PREFIX}.133"
+MANAGEMENT_TINKERBELL_IP="${IP_SUBNET_PREFIX}.130"
+
 # https://github.com/mikefarah/yq/releases/download/v4.33.3/yq_linux_arm64
 
 sed -i "s/${OLD_CURRENT_BRANCH}/${CURRENT_BRANCH}/g" applications/workload/templates/*
