@@ -1010,7 +1010,7 @@ cluster:
       storage: # cluster level storage configuration and selection
         useAllNodes: true
         useAllDevices: true
-        devicePathFilter: "/dev/sdb"
+        devicePathFilter: "/dev/nvme*|/dev/sd*|/dev/vd*"
         onlyApplyOSDPlacement: false
         # deviceFilter:
         # config:
