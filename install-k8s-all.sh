@@ -61,7 +61,7 @@ until kubectl wait deployment -n ingress-nginx ingress-nginx-controller --for co
 helm upgrade --install kube-vip kube-vip/kube-vip --version v0.8.0 \
   --namespace kube-vip --create-namespace \
   -f helm/config/management/ingress-nginx/kube-vip-values.yaml \
-  --set-json ".env.vip_interface=\"${MANAGEMENT_VIP_NIC}\""
+  --set-json "env.vip_interface=\"${MANAGEMENT_VIP_NIC}\""
 
 helm upgrade --install argo-cd \
   --create-namespace --namespace argo-cd \
