@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cilium-manifests
+  name: cilium-manifests-baremetal
 spec:
   syncPolicy:
     syncOptions:
@@ -13,6 +13,24 @@ spec:
     name: kub-poc-admin@kub-poc
   project: default
   source:
-    path: config/workload/cilium
+    path: config/workload/cilium-baremetal
+    repoURL: git@github.com:ader1990/BMK.git
+    targetRevision: baremetal_virtual
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium-manifests-virtual
+spec:
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+  destination:
+    namespace: kube-system
+    name: kub-poc-admin@kub-poc
+  project: default
+  source:
+    path: config/workload/cilium-virtual
     repoURL: git@github.com:ader1990/BMK.git
     targetRevision: baremetal_virtual

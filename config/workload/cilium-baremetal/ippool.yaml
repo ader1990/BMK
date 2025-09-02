@@ -1,0 +1,8 @@
+apiVersion: cilium.io/v2alpha1
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: lb-ippool
+spec:
+  blocks:
+    - cidr: 10.8.10.144/29
+  disabled: false

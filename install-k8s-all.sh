@@ -146,7 +146,7 @@ argocd app create workload-cluster-apps \
 kubectl --kubeconfig ~/kub-poc.kubeconfig get node -o name | sed -e 's/.*\///g' | xargs -I {} kubectl --kubeconfig ~/kub-poc.kubeconfig patch node {} -p '{"spec":{"taints":[]}}' || true
 
 argocd app get workload-cluster-apps --hard-refresh
-argocd app sync cilium-manifests || true
+argocd app sync cilium-manifests-${DEPLOYMENT_TYPE} || true
 argocd app sync cilium-kub-poc || true
 
 sleep 5
@@ -154,10 +154,10 @@ sleep 5
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kube-system cilium-operator --for condition=Available=True --timeout=90s; do argocd app sync cilium-kub-poc || sleep 1; done
 sleep 5
 
-argocd app sync cilium-manifests --force || argocd app sync cilium-kub-poc
+argocd app sync cilium-manifests-${DEPLOYMENT_TYPE} --force || argocd app sync cilium-kub-poc
 
-until kubectl get CiliumLoadBalancerIPPool --kubeconfig ~/kub-poc.kubeconfig || (argocd app sync cilium-manifests && argocd app sync cilium-kub-poc); do sleep 1; done
-until (argocd app sync cilium-manifests || argocd app sync cilium-kub-poc) && kubectl get CiliumLoadBalancerIPPool --kubeconfig ~/kub-poc.kubeconfig; do sleep 1; done
+until kubectl get CiliumLoadBalancerIPPool --kubeconfig ~/kub-poc.kubeconfig || (argocd app sync cilium-manifests-${DEPLOYMENT_TYPE} && argocd app sync cilium-kub-poc); do sleep 1; done
+until (argocd app sync cilium-manifests-${DEPLOYMENT_TYPE} || argocd app sync cilium-kub-poc) && kubectl get CiliumLoadBalancerIPPool --kubeconfig ~/kub-poc.kubeconfig; do sleep 1; done
 
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n kube-system cilium-operator --for condition=Available=True --timeout=90s; do sleep 1; done
 
