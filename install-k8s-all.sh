@@ -204,8 +204,8 @@ argocd app sync testvm --force --prune || argocd app sync testvm --force --prune
 
 NODES=$(kubectl --kubeconfig ~/kub-poc.kubeconfig get node -o name | sed -e 's/.*\///g')
 for NODE in $NODES; do
-    kubectl patch node $NODE -p '{"spec":{"taints":[]}}' || true
-    until kubectl node-shell $NODE -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+    KUBECONFIG=~/kub-poc.kubeconfig kubectl patch node $NODE -p '{"spec":{"taints":[]}}' || true
+    until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell $NODE -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
 done
 
 until kubectl --kubeconfig ~/kub-poc.kubeconfig wait vmi/fedora-public-ip --for condition=Ready --timeout=90s; do sleep 1; done
