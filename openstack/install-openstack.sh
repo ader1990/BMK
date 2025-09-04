@@ -86,7 +86,7 @@ rm -rf openstack-helm
 
 OVERRIDES_URL=https://opendev.org/openstack/openstack-helm/raw/branch/master/values_overrides
 if [[ "${DEPLOYMENT_TYPE}" = "baremetal" ]]; then
-  OVERRIDES_URL=https://github.com/ader1990/openstack-helm/raw/branch/${DEPLOYMENT_TYPE}/values_overrides
+  OVERRIDES_URL=https://raw.githubusercontent.com/ader1990/openstack-helm/refs/heads/${DEPLOYMENT_TYPE}/values_overrides
 fi
 
 for chart in rabbitmq mariadb memcached openvswitch libvirt keystone heat glance cinder placement nova neutron horizon; do
@@ -168,10 +168,12 @@ cd ../cinder/
 helm dependency build
 popd
 
-helm upgrade --install cinder openstack-helm/cinder \
+if [[ "${DEPLOYMENT_TYPE}" = "virtual" ]]; then
+  helm upgrade --install cinder openstack-helm/cinder \
     --namespace=openstack \
     --timeout=600s \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c cinder ${FEATURES}) &
+fi
 
 helm upgrade --install nova openstack-helm/nova \
     --namespace=openstack \
@@ -217,5 +219,8 @@ if [[ "${DEPLOYMENT_TYPE}" = "baremetal" ]]; then
     EXT_NET_CIDR='192.168.56.0/24'
     EXT_NET_GATEWAY='192.168.56.1'
     UPSTREAM_CONNECTIVITY_PROVIDER_INTERFACE=enP6p1s0f0np0
-    until kubectl node-shell $NODE -- sh -c "ifconfig br-ex $EXT_NET_GATEWAY netmask 255.255.255.0 up && iptables -t nat -A POSTROUTING -s $EXT_NET_CIDR -o $UPSTREAM_CONNECTIVITY_PROVIDER_INTERFACE -j MASQUERADE"; do sleep 1; done
+    for NODE in $NODES; do
+      until kubectl node-shell $NODE -- sh -c "ifconfig br-ex $EXT_NET_GATEWAY netmask 255.255.255.0 up && iptables -t nat -A POSTROUTING -s $EXT_NET_CIDR -o $UPSTREAM_CONNECTIVITY_PROVIDER_INTERFACE -j MASQUERADE"; do sleep 1; done
+    done
 fi
+
