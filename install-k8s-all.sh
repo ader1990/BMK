@@ -4,6 +4,8 @@ set -xe
 
 sudo ls
 
+export KUBECONFIG=
+
 CURRENT_BRANCH=$(git branch --show-current)
 OLD_CURRENT_BRANCH="old_branch"
 
