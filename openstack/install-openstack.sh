@@ -11,7 +11,7 @@ NODES=$(kubectl get node -o name | sed -e 's/.*\///g')
 
 for NODE in $NODES; do
     kubectl patch node $NODE -p '{"spec":{"taints":[]}}' || true
-    until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell $NODE -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+    until kubectl node-shell $NODE -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
 done
 
 kubectl label --overwrite nodes --all openstack-control-plane=enabled
@@ -180,6 +180,11 @@ helm upgrade --install nova openstack-helm/nova \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c nova ${FEATURES}) &
 
 PROVIDER_INTERFACE=eth1
+
+if [[ "${DEPLOYMENT_TYPE}" = "baremetal" ]]; then
+  PROVIDER_INTERFACE=enP3s1f3np3
+fi
+
 tee ${OVERRIDES_DIR}/neutron/neutron_simple.yaml << EOF
 conf:
   neutron:
@@ -207,3 +212,10 @@ rm -rf openstack-helm
 rm -rf "${OVERRIDES_DIR}"
 
 helm osh wait-for-pods openstack
+
+if [[ "${DEPLOYMENT_TYPE}" = "baremetal" ]]; then
+    EXT_NET_CIDR='192.168.56.0/24'
+    EXT_NET_GATEWAY='192.168.56.1'
+    UPSTREAM_CONNECTIVITY_PROVIDER_INTERFACE=enP6p1s0f0np0
+    until kubectl node-shell $NODE -- sh -c "ifconfig br-ex $EXT_NET_GATEWAY netmask 255.255.255.0 up && iptables -t nat -A POSTROUTING -s $EXT_NET_CIDR -o $UPSTREAM_CONNECTIVITY_PROVIDER_INTERFACE -j MASQUERADE"; do sleep 1; done
+fi
