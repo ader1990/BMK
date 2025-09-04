@@ -168,12 +168,10 @@ cd ../cinder/
 helm dependency build
 popd
 
-if [[ "${DEPLOYMENT_TYPE}" = "virtual" ]]; then
-  helm upgrade --install cinder openstack-helm/cinder \
+helm upgrade --install cinder openstack-helm/cinder \
     --namespace=openstack \
     --timeout=600s \
     $(helm osh get-values-overrides -p ${OVERRIDES_DIR} -c cinder ${FEATURES}) &
-fi
 
 helm upgrade --install nova openstack-helm/nova \
     --namespace=openstack \
