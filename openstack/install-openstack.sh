@@ -3,21 +3,21 @@
 
 set -xe
 
+DEPLOYMENT_TYPE="${1:-baremetal}"
+
 export KUBECONFIG=~/kub-poc.kubeconfig
 
-kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm01 -p '{"spec":{"taints":[]}}' || true
-kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm02 -p '{"spec":{"taints":[]}}' || true
-kubectl --kubeconfig ~/kub-poc.kubeconfig patch node vm03 -p '{"spec":{"taints":[]}}' || true
+NODES=$(kubectl get node -o name | sed -e 's/.*\///g')
 
-until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm01 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
-until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm02 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
-until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell vm03 -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+for NODE in $NODES; do
+    kubectl patch node $NODE -p '{"spec":{"taints":[]}}' || true
+    until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell $NODE -- sh -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf && echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf && sysctl -p /etc/sysctl.conf"; do sleep 1; done
+done
 
 kubectl label --overwrite nodes --all openstack-control-plane=enabled
 kubectl label --overwrite nodes --all openstack-compute-node=enabled
 kubectl label --overwrite nodes --all openvswitch=enabled
 kubectl label --overwrite nodes --all linuxbridge=enabled
-
 
 helm repo add openstack-helm https://tarballs.opendev.org/openstack/openstack-helm
 helm plugin install https://opendev.org/openstack/openstack-helm-plugin || helm plugin update osh || true
@@ -56,7 +56,7 @@ spec:
 EOF
 kubectl apply -f /tmp/openstack_lb.yaml
 
-tee > /tmp/ceph_adpater.yaml <<EOF
+tee > /tmp/ceph_adapter.yaml <<EOF
 ceph_cluster_namespace: rook-ceph
 admin_secret_namespace: rook-ceph
 endpoints:
@@ -65,9 +65,18 @@ endpoints:
     namespace: rook-ceph
 EOF
 
+if [[ "${DEPLOYMENT_TYPE}" = "baremetal" ]]; then
+  tee >> /tmp/ceph_adapter.yaml <<EOF
+images:
+  tags:
+    ceph_config_helper: tinkerbell.azurecr.io/foki/ceph-config-helper:19.2.3-1-foki-ubuntu_jammy
+    dep_check: tinkerbell.azurecr.io/foki/kubernetes-entrypoint:latest-ubuntu_jammy
+EOF
+fi
+
 # this chart upgrade resets the mon discovery configmap: configmap/ceph-etc -n openstack
 # do not upgrade!!!
-helm install ceph-adapter-rook openstack-helm/ceph-adapter-rook --namespace=openstack --values /tmp/ceph_adpater.yaml || true
+helm install ceph-adapter-rook openstack-helm/ceph-adapter-rook --namespace=openstack --values /tmp/ceph_adapter.yaml || true
 
 export OPENSTACK_RELEASE=2025.1
 export FEATURES="${OPENSTACK_RELEASE} ubuntu_noble"
@@ -75,9 +84,11 @@ export OVERRIDES_DIR=$(pwd)/overrides
 rm -rf $OVERRIDES_DIR
 rm -rf openstack-helm
 
-export OVERRIDES_URL=https://opendev.org/openstack/openstack-helm/raw/branch/master/values_overrides
-
 OVERRIDES_URL=https://opendev.org/openstack/openstack-helm/raw/branch/master/values_overrides
+if [[ "${DEPLOYMENT_TYPE}" = "baremetal" ]]; then
+  OVERRIDES_URL=https://github.com/ader1990/openstack-helm/raw/branch/${DEPLOYMENT_TYPE}/values_overrides
+fi
+
 for chart in rabbitmq mariadb memcached openvswitch libvirt keystone heat glance cinder placement nova neutron horizon; do
     helm osh get-values-overrides -d -u ${OVERRIDES_URL} -p ${OVERRIDES_DIR} -c ${chart} ${FEATURES}
 done
