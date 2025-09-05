@@ -170,17 +170,18 @@ until kubectl --kubeconfig ~/kub-poc.kubeconfig wait pod -n nginx nginx --for co
 # argocd app sync mssql
 # until kubectl --kubeconfig ~/kub-poc.kubeconfig exec -ti deployment/kub-poc-mssql2022v3 -- /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "P@ssw0rd1" -Q "SELECT name, database_id, create_date  FROM sys.databases"; do sleep 1; done
 
-until argocd app sync rook-ceph-operator; do sleep 5; done
-until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n rook-ceph rook-ceph-operator --for condition=Available=True --timeout=90s; do sleep 1; done
-
-until argocd app sync ceph-classes; do sleep 5; done
-
 if [[ "${DEPLOYMENT_TYPE}" = "baremetal" ]]; then
+  NODES=$(kubectl --kubeconfig ~/kub-poc.kubeconfig get node -o name | sed -e 's/.*\///g')
   for NODE in $NODES; do
     # cleanup nodes from previous ceph
     until KUBECONFIG=~/kub-poc.kubeconfig kubectl node-shell $NODE -- sh -c 'export DISK=$(fdisk -l | grep "Disk model: INTEL SSD" -B 1 | head -n 1 | awk '\''{print $2}'\'' | sed "s/:$//") && echo "w" | fdisk $DISK && sgdisk --zap-all $DISK && blkdiscard $DISK || sudo dd if=/dev/zero of="$DISK" bs=1M count=100 oflag=direct,dsync && partprobe $DISK && rm -rf /var/lib/rook'; do sleep 1; done;
   done
 fi
+
+until argocd app sync rook-ceph-operator; do sleep 5; done
+until kubectl --kubeconfig ~/kub-poc.kubeconfig wait deployment -n rook-ceph rook-ceph-operator --for condition=Available=True --timeout=90s; do sleep 1; done
+
+until argocd app sync ceph-classes; do sleep 5; done
 
 until argocd app sync rook-ceph-cluster; do sleep 5; done
 
